@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1B5E20">
+    <title>Survey App - Missing Details</title>
+    <style>
+        :root{--p:#1B5E20;--pd:#0D3B13;--pl:#E8F5E9;--a:#FF6F00;--al:#FFF3E0;--bg:#F1F8E9;--c:#FFF;--t:#1A1A2E;--td:#6B7280;--tl:#9CA3AF;--b:#E5E7EB;--r:#EF4444;--w:#F59E0B;--s:#10B981;--sh:0 2px 8px rgba(0,0,0,0.06);}
+        *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-tap-highlight-color:transparent;}
+        body{background:var(--bg);color:var(--t);min-height:100vh;padding-bottom:70px;}
+
+        .splash{position:fixed;inset:0;background:var(--p);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s;}
+        .splash.hide{opacity:0;pointer-events:none;}
+        .splash .logo{width:90px;height:90px;background:#fff;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:900;color:var(--p);margin-bottom:12px;}
+        .splash h2{color:#fff;font-size:1.1rem;}.splash p{color:rgba(255,255,255,.7);font-size:.75rem;margin-top:4px;}
+        .splash .sp{width:28px;height:28px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-top:20px;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        .login{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--p),var(--pd));padding:20px;}
+        .login .box{background:#fff;border-radius:18px;padding:28px 22px;width:100%;max-width:380px;}
+        .login .li{width:60px;height:60px;background:var(--pl);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.6rem;font-weight:900;color:var(--p);}
+        .login h2{text-align:center;font-size:1.2rem;margin-bottom:2px;}.login .sub{text-align:center;color:var(--td);font-size:.78rem;margin-bottom:18px;}
+        .lin{width:100%;padding:12px;border:2px solid var(--b);border-radius:10px;font-size:.9rem;outline:none;margin-bottom:10px;background:var(--bg);}
+        .lin:focus{border-color:var(--p);background:#fff;}
+        .lbtn{width:100%;padding:12px;background:var(--p);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:4px;}
+        .lbtn:active{background:var(--pd);transform:scale(.98);}
+        .lerr{color:var(--r);font-size:.75rem;text-align:center;margin-top:8px;display:none;}
+
+        .topbar{position:sticky;top:0;z-index:100;background:var(--p);}
+        .tb-row{display:flex;align-items:center;padding:10px 14px;gap:10px;}
+        .tb-ham{background:none;border:none;color:#fff;font-size:1.3rem;cursor:pointer;padding:4px;}
+        .tb-info{flex:1;}.tb-info h1{font-size:.95rem;color:#fff;font-weight:700;}.tb-info p{font-size:.6rem;color:rgba(255,255,255,.7);}
+        .tb-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;position:relative;}
+        .tb-btn .dot{position:absolute;top:3px;right:3px;width:6px;height:6px;background:var(--w);border-radius:50%;display:none;}
+        .tb-status{background:rgba(0,0,0,.12);padding:4px 14px;display:flex;align-items:center;justify-content:space-between;font-size:.6rem;color:rgba(255,255,255,.8);}
+        .ndot{width:6px;height:6px;border-radius:50%;background:var(--s);display:inline-block;margin-right:4px;}.ndot.off{background:var(--r);}
+        .ptag{background:var(--w);color:#fff;padding:1px 7px;border-radius:10px;font-weight:700;font-size:.55rem;display:none;}
+
+        .sb-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s;}.sb-ov.open{opacity:1;pointer-events:auto;}
+        .sb{position:fixed;top:0;left:-270px;width:270px;height:100vh;background:#fff;z-index:201;transition:left .3s;overflow-y:auto;}.sb.open{left:0;}
+        .sb-head{background:var(--p);padding:22px 18px 16px;color:#fff;}
+        .sb-av{width:44px;height:44px;background:rgba(255,255,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;margin-bottom:8px;}
+        .sb-nm{font-size:.95rem;font-weight:700;}.sb-ph{font-size:.7rem;color:rgba(255,255,255,.7);}
+        .sb-role{display:inline-block;background:rgba(255,255,255,.2);padding:2px 8px;border-radius:8px;font-size:.55rem;margin-top:4px;font-weight:600;}
+        .sb-sec{padding:8px 18px 3px;font-size:.55rem;color:var(--tl);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;}
+        .sb-lk{display:flex;align-items:center;gap:10px;padding:10px 18px;cursor:pointer;font-size:.85rem;color:var(--td);font-weight:500;border:none;background:none;width:100%;text-align:left;transition:.15s;}
+        .sb-lk:active,.sb-lk.act{background:var(--pl);color:var(--p);font-weight:700;}
+        .sb-lk .ic{font-size:1rem;width:22px;text-align:center;}.sb-lk .bg{margin-left:auto;background:var(--r);color:#fff;font-size:.5rem;padding:2px 6px;border-radius:8px;font-weight:700;}
+        .sb-div{height:1px;background:var(--b);margin:6px 18px;}.sb-lk.red{color:var(--r);}
+
+        .bnav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#fff;display:flex;border-top:1px solid var(--b);padding:4px 0;padding-bottom:max(4px,env(safe-area-inset-bottom));}
+        .bn{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 0;cursor:pointer;border:none;background:none;}.bn .bi{font-size:1.15rem;}.bn .bl{font-size:.55rem;color:var(--td);font-weight:500;}
+        .bn.act .bi{transform:scale(1.1);}.bn.act .bl{color:var(--p);font-weight:700;}
+        .bn .bb{position:absolute;top:1px;right:18%;background:var(--r);color:#fff;font-size:.45rem;padding:1px 4px;border-radius:8px;font-weight:700;min-width:14px;text-align:center;display:none;}
+
+        .pg{display:none;padding:14px;animation:fu .25s;}.pg.act{display:block;}
+        @keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+        .card{background:var(--c);border:1px solid var(--b);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:var(--sh);}
+        .ct{font-size:.9rem;color:var(--p);margin-bottom:10px;display:flex;align-items:center;gap:6px;font-weight:700;}
+        .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:12px;}
+        .stb{background:var(--c);border:1px solid var(--b);border-radius:10px;padding:10px 4px;text-align:center;box-shadow:var(--sh);}
+        .stb .n{font-size:1.3rem;font-weight:800;}.stb .l{font-size:.5rem;color:var(--td);text-transform:uppercase;letter-spacing:.5px;margin-top:1px;font-weight:600;}
+        .cp{color:var(--p);}.cg{color:var(--s);}.co{color:var(--a);}
+
+        .fg{margin-bottom:11px;}
+        .fg label{display:flex;align-items:center;gap:4px;font-size:.65rem;color:var(--td);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;font-weight:600;}
+        .fg label .rq{color:var(--r);}
+        .fg input,.fg select,.fg textarea{width:100%;background:var(--bg);border:2px solid var(--b);border-radius:10px;padding:11px;color:var(--t);font-size:.88rem;outline:none;transition:.2s;}
+        .fg textarea{min-height:65px;resize:vertical;}
+        .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--p);background:#fff;}
+        .fg select{cursor:pointer;-webkit-appearance:none;}
+        .fg .hint{font-size:.58rem;color:var(--tl);margin-top:2px;}
+
+        .mcap{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px;}
+        .mcb{position:relative;overflow:hidden;padding:12px 6px;border:2px dashed var(--b);border-radius:10px;background:var(--bg);cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;}
+        .mcb:active{border-color:var(--p);background:var(--pl);}
+        .mcb .mi{font-size:1.3rem;}.mcb .mt{font-size:.6rem;color:var(--td);font-weight:600;}
+        .mcb input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+        .mpr{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+        .mth{position:relative;border-radius:7px;overflow:hidden;aspect-ratio:1;background:var(--bg);border:1px solid var(--b);}
+        .mth img,.mth video{width:100%;height:100%;object-fit:cover;}
+        .mth .rm{position:absolute;top:2px;right:2px;width:18px;height:18px;background:var(--r);color:#fff;border:none;border-radius:50%;font-size:.55rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+        .btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+        .btn:active{transform:scale(.97);}
+        .btn-p{background:var(--p);color:#fff;}.btn-s{background:var(--s);color:#fff;}
+        .btn-o{background:transparent;color:var(--p);border:2px solid var(--p);}
+        .btn-w{background:var(--w);color:#fff;}.btn-r{background:var(--r);color:#fff;margin-top:7px;}
+        .btn-sm{width:auto;padding:6px 12px;font-size:.7rem;border-radius:6px;display:inline-flex;}
+
+        .sc{background:var(--c);border:1px solid var(--b);border-radius:11px;padding:10px;margin-bottom:7px;box-shadow:var(--sh);position:relative;}
+        .sc.sp{border-left:3px solid var(--w);background:#FFFBEB;}.sc.sf{border-left:3px solid var(--r);background:#FEF2F2;}.sc.ss{border-left:3px solid var(--s);}
+        .sc .st{position:absolute;top:5px;right:5px;padding:2px 6px;border-radius:8px;font-size:.5rem;font-weight:700;text-transform:uppercase;color:#fff;}
+        .st.tp{background:var(--w);}.st.tf{background:var(--r);}.st.ts{background:var(--s);}.st.tu{background:var(--p);}
+        .sc-h{display:flex;align-items:center;gap:7px;margin-bottom:5px;padding-right:60px;}
+        .sc-sr{background:var(--p);color:#fff;width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0;}
+        .sc-nm{font-size:.8rem;font-weight:700;}.sc-dt{font-size:.55rem;color:var(--td);}
+        .sc-d{display:grid;grid-template-columns:1fr 1fr;gap:1px 6px;}
+        .sc-r{display:flex;justify-content:space-between;padding:1px 0;}.sc-rl{font-size:.58rem;color:var(--td);font-weight:600;}.sc-rv{font-size:.65rem;font-weight:600;}
+        .sc-ph{display:flex;gap:3px;margin-top:5px;overflow-x:auto;}.sc-ph img,.sc-ph video{width:42px;height:42px;object-fit:cover;border-radius:5px;border:1px solid var(--b);flex-shrink:0;}
+        .sc-ac{display:flex;gap:4px;margin-top:5px;}
+        .sc-gps{font-size:.55rem;color:var(--p);margin-top:3px;}
+
+        .synbtn{padding:9px;border-radius:9px;margin-bottom:10px;display:none;align-items:center;gap:7px;font-size:.78rem;font-weight:600;cursor:pointer;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;width:100%;}.synbtn.show{display:flex;}
+
+        .sbox{width:100%;padding:9px 11px;border:2px solid var(--b);border-radius:9px;font-size:.82rem;outline:none;background:var(--c);margin-bottom:9px;}.sbox:focus{border-color:var(--p);}
+        .ftabs{display:flex;gap:4px;margin-bottom:9px;overflow-x:auto;}.ft{padding:4px 10px;border:1px solid var(--b);border-radius:15px;background:#fff;color:var(--td);font-size:.65rem;font-weight:600;cursor:pointer;white-space:nowrap;}.ft.act{background:var(--p);color:#fff;border-color:var(--p);}
+
+        .pcard{text-align:center;padding:16px 0;}
+        .pav{width:55px;height:55px;background:var(--pl);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 7px;font-size:1.4rem;font-weight:800;color:var(--p);}
+        .pnm{font-size:.95rem;font-weight:700;}.pph{font-size:.78rem;color:var(--td);}
+        .pst{display:flex;justify-content:center;gap:20px;margin-top:10px;}.psi .pn{font-size:1rem;font-weight:800;color:var(--p);}.psi .pl{font-size:.5rem;color:var(--td);text-transform:uppercase;}
+        .irow{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--b);}.irow .il{font-size:.75rem;color:var(--td);}.irow .iv{font-size:.75rem;font-weight:600;}
+
+        .viewer{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:400;display:none;align-items:center;justify-content:center;flex-direction:column;}.viewer.open{display:flex;}
+        .viewer img,.viewer video{max-width:95%;max-height:80vh;border-radius:7px;}
+        .vx{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+        .loading{position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;}.loading.show{display:flex;}
+        .ldspin{width:32px;height:32px;border:3px solid var(--b);border-top-color:var(--p);border-radius:50%;animation:spin .7s linear infinite;}
+        .ldmsg{font-size:.8rem;color:var(--td);font-weight:600;}
+        .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--t);color:#fff;padding:9px 18px;border-radius:9px;font-size:.75rem;font-weight:600;opacity:0;transition:.3s;z-index:600;max-width:88%;text-align:center;pointer-events:none;}.toast.show{opacity:1;}.toast.err{background:var(--r);}.toast.ok{background:var(--s);}
+        .empty{text-align:center;padding:25px 12px;}.empty .ei{font-size:2rem;margin-bottom:5px;}.empty p{color:var(--td);font-size:.8rem;}
+        .nbanner{position:fixed;top:0;left:0;right:0;z-index:300;padding:7px;text-align:center;font-size:.7rem;font-weight:700;color:#fff;transform:translateY(-100%);transition:transform .3s;}.nbanner.show{transform:translateY(0);}.nbanner.offline{background:var(--r);}.nbanner.online{background:var(--s);}
+        @media(min-width:500px){body{max-width:480px;margin:0 auto;}.bnav{max-width:480px;left:50%;transform:translateX(-50%);}}
+    </style>
+</head>
+<body>
+<div class="splash" id="splash"><div class="logo">S2</div><h2>Missing Details Survey</h2><p>Survey App - Phase 2</p><div class="sp"></div></div>
+<div class="login" id="loginPg"><div class="box"><div class="li">S2</div><h2>Survey Phase 2</h2><p class="sub">Missing Details - Officer Login</p><input class="lin" type="tel" id="lph" placeholder="📞 Phone Number" maxlength="15"><input class="lin" type="password" id="lpw" placeholder="🔒 Password"><button class="lbtn" onclick="doLogin()">Login →</button><p class="lerr" id="lerr"></p></div></div>
+
+<div id="app" style="display:none;">
+<div class="nbanner" id="nban"></div>
+<div class="topbar"><div class="tb-row"><button class="tb-ham" onclick="tSB()">☰</button><div class="tb-info"><h1>Missing Details Survey</h1><p>Phase 2 - Supplementary Data</p></div><button class="tb-btn" onclick="mSync()">🔄<span class="dot" id="sDot"></span></button></div><div class="tb-status"><span><span class="ndot" id="nDot"></span><span id="nLbl">Online</span></span><span class="ptag" id="pTag"></span></div></div>
+
+<div class="sb-ov" id="sbOv" onclick="tSB()"></div>
+<div class="sb" id="sb">
+<div class="sb-head"><div class="sb-av" id="sAv">O</div><div class="sb-nm" id="sNm">Officer</div><div class="sb-ph" id="sPh">--</div><div class="sb-role">Field Officer</div></div>
+<div class="sb-sec">Main</div>
+<button class="sb-lk act" onclick="gp('home')"><span class="ic">🏠</span>Dashboard</button>
+<button class="sb-lk" onclick="gp('add')"><span class="ic">➕</span>Add Survey</button>
+<button class="sb-lk" onclick="gp('data')"><span class="ic">📁</span>My Data<span class="bg" id="sBg" style="display:none">0</span></button>
+<div class="sb-div"></div><div class="sb-sec">Account</div>
+<button class="sb-lk" onclick="gp('profile')"><span class="ic">👤</span>Profile</button>
+<div class="sb-div"></div>
+<button class="sb-lk red" onclick="doLogout()"><span class="ic">🚪</span>Logout</button>
+</div>
+
+<div class="pg act" id="pg-home">
+<div class="stats"><div class="stb"><div class="n cp" id="hT">0</div><div class="l">Total</div></div><div class="stb"><div class="n cg" id="hD">0</div><div class="l">Today</div></div><div class="stb"><div class="n co" id="hP">0</div><div class="l">Pending</div></div></div>
+<button class="synbtn" id="synBtn" onclick="mSync()">📤 <span id="synTx">Upload Pending</span></button>
+<div class="ct">📋 Recent Surveys</div>
+<input class="sbox" type="text" id="hSrch" placeholder="🔍 Search..." oninput="rHome()">
+<div id="hList"></div>
+</div>
+
+<div class="pg" id="pg-add">
+<div class="card"><div class="ct">📝 New Missing Details Survey</div><div id="sForm"></div>
+<div class="fg"><label>📍 GPS Location</label><input type="text" id="gpsF" placeholder="Getting location..." readonly onclick="getGPS()"></div>
+<div style="margin-bottom:11px;"><div style="font-size:.65rem;color:var(--td);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;font-weight:600;">📸 Photos / Videos</div>
+<div class="mcap"><label class="mcb"><span class="mi">📷</span><span class="mt">Take Photo</span><input type="file" accept="image/*" capture="environment" onchange="addFile(event,'image')"></label><label class="mcb"><span class="mi">🎥</span><span class="mt">Record Video</span><input type="file" accept="video/*" capture="environment" onchange="addFile(event,'video')"></label></div>
+<div class="mpr" id="mPrev"></div></div>
+<button class="btn btn-p" onclick="submitS()">💾 Save Survey</button>
+<p style="text-align:center;color:var(--tl);font-size:.58rem;margin-top:5px;">💡 Offline mein bhi save hoga</p>
+</div></div>
+
+<div class="pg" id="pg-data">
+<div class="ftabs"><button class="ft act" onclick="setF('all',this)">All</button><button class="ft" onclick="setF('synced',this)">✅ Synced</button><button class="ft" onclick="setF('pending',this)">⏳ Pending</button><button class="ft" onclick="setF('failed',this)">❌ Failed</button></div>
+<input class="sbox" type="text" id="dSrch" placeholder="🔍 Search..." oninput="rData()">
+<div id="dList"></div>
+</div>
+
+<div class="pg" id="pg-profile">
+<div class="card"><div class="pcard"><div class="pav" id="pAv">O</div><div class="pnm" id="pNm">Officer</div><div class="pph" id="pPh">--</div>
+<div class="pst"><div class="psi"><div class="pn" id="pT2">0</div><div class="pl">Total</div></div><div class="psi"><div class="pn" id="pD2">0</div><div class="pl">Today</div></div><div class="psi"><div class="pn" id="pP2">0</div><div class="pl">Pending</div></div></div></div></div>
+<div class="card"><div class="ct">📊 Info</div>
+<div class="irow"><span class="il">📶 Network</span><span class="iv" id="pNet">Online</span></div>
+<div class="irow"><span class="il">💾 Pending</span><span class="iv" id="pPI">0</span></div>
+<div class="irow"><span class="il">✅ Uploaded</span><span class="iv" id="pUI">0</span></div>
+</div>
+<button class="btn btn-w" onclick="mSync()">🔄 Sync Now</button>
+<button class="btn btn-r" onclick="doLogout()">🚪 Logout</button>
+</div>
+
+<div class="bnav">
+<button class="bn act" onclick="gp('home')" id="nh"><span class="bi">🏠</span><span class="bl">Home</span></button>
+<button class="bn" onclick="gp('add')" id="na"><span class="bi">➕</span><span class="bl">Add Survey</span></button>
+<button class="bn" onclick="gp('data')" id="nd"><span class="bi">📁</span><span class="bl">My Data</span><span class="bb" id="dBg"></span></button>
+<button class="bn" onclick="gp('profile')" id="np"><span class="bi">👤</span><span class="bl">Profile</span></button>
+</div>
+</div>
+
+<div class="viewer" id="vw"><button class="vx" onclick="cV()">✕</button><div id="vwC"></div></div>
+<div class="loading" id="ld"><div class="ldspin"></div><div class="ldmsg" id="ldM">Loading...</div></div>
+<div class="toast" id="tst"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({apiKey:"AIzaSyC6-JqJHut8FbFhA5_wLVdFUt1rpuT9HME",authDomain:"data-center-wasa.firebaseapp.com",projectId:"data-center-wasa",storageBucket:"data-center-wasa.firebasestorage.app",messagingSenderId:"78737102659",appId:"1:78737102659:web:33a484a19872087ac2c1f6"});
+const db=firebase.firestore();db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+const CLD='pfnarf4c',PRE='Survey Uploads';
+// Collection name - DIFFERENT from first survey app
+const COL='surveys2';
+const FCOL='settings2';
+
+let U=null,MF=[],ON=navigator.onLine,SY=false,SF=[],AD=[],CF='all',ST=null;
+const STOUT=30*60*1000;
+
+// Default fields - Admin can customize these
+const DF=[
+{name:'Sr. No.',type:'number',icon:'#️⃣',required:true},
+{name:'Property Number',type:'text',icon:'🏠',required:true},
+{name:'Owner Name',type:'text',icon:'👤',required:true},
+{name:'Address',type:'text',icon:'📍',required:true},
+{name:'Missing Detail',type:'textarea',icon:'📝',required:true},
+{name:'Current Status',type:'select',icon:'📊',required:true,options:['Pending','In Progress','Completed','Rejected']},
+{name:'Priority',type:'select',icon:'🔴',required:false,options:['High','Medium','Low']},
+{name:'ID Card',type:'text',icon:'🪪',required:false},
+{name:'Phone',type:'tel',icon:'📞',required:false},
+{name:'Comment',type:'textarea',icon:'💬',required:false}
+];
+
+async function sha(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');}
+
+let idb=null;
+function oIDB(){return new Promise((r,j)=>{const q=indexedDB.open('WASA_DB2',3);q.onerror=()=>j(q.error);q.onsuccess=()=>{idb=q.result;r();};q.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('pending'))d.createObjectStore('pending',{keyPath:'lid'});if(!d.objectStoreNames.contains('synced'))d.createObjectStore('synced',{keyPath:'id'});if(!d.objectStoreNames.contains('config'))d.createObjectStore('config',{keyPath:'key'});};});}
+function dP(s,d){return new Promise((r,j)=>{const t=idb.transaction(s,'readwrite').objectStore(s).put(d);t.onsuccess=()=>r();t.onerror=()=>j();});}
+function dG(s,k){return new Promise((r,j)=>{const t=idb.transaction(s,'readonly').objectStore(s).get(k);t.onsuccess=()=>r(t.result);t.onerror=()=>j();});}
+function dA(s){return new Promise((r,j)=>{const t=idb.transaction(s,'readonly').objectStore(s).getAll();t.onsuccess=()=>r(t.result||[]);t.onerror=()=>j();});}
+function dD(s,k){return new Promise((r,j)=>{const t=idb.transaction(s,'readwrite').objectStore(s).delete(k);t.onsuccess=()=>r();t.onerror=()=>j();});}
+
+window.addEventListener('online',()=>{ON=true;uNet();showNB('✅ Online!','online');setTimeout(()=>aSync(),2000);});
+window.addEventListener('offline',()=>{ON=false;uNet();showNB('⚠️ Offline mode','offline');});
+function uNet(){const d=document.getElementById('nDot'),l=document.getElementById('nLbl'),p=document.getElementById('pNet');if(d)d.classList.toggle('off',!ON);if(l)l.textContent=ON?'Online':'Offline';if(p){p.textContent=ON?'🟢 Online':'🔴 Offline';p.style.color=ON?'var(--s)':'var(--r)';}}
+function showNB(m,c){const b=document.getElementById('nban');b.textContent=m;b.className='nbanner show '+c;setTimeout(()=>b.classList.remove('show'),3000);}
+
+function rSes(){clearTimeout(ST);ST=setTimeout(()=>{if(U){toast('⏰ Session expired!','err');U=null;localStorage.removeItem('wasaO2');document.getElementById('loginPg').style.display='flex';document.getElementById('app').style.display='none';}},STOUT);}
+document.addEventListener('click',rSes);document.addEventListener('touchstart',rSes);
+
+function nf(arr){if(!arr||!Array.isArray(arr))return DF;return arr.map(f=>({name:f.name||f.n||'Field',type:f.type||f.t||'text',icon:f.icon||f.i||'📌',required:f.required!==undefined?f.required:(f.r!==undefined?f.r:false),options:f.options||f.o||null}));}
+
+window.onload=async function(){try{await oIDB();}catch(e){}setTimeout(()=>{document.getElementById('splash').classList.add('hide');const s=localStorage.getItem('wasaO2');if(s){U=JSON.parse(s);showApp();if(ON)vUser();}else showLgn();},1200);}
+function showLgn(){document.getElementById('loginPg').style.display='flex';document.getElementById('app').style.display='none';}
+function showApp(){document.getElementById('loginPg').style.display='none';document.getElementById('app').style.display='block';uNet();lFields();loadD();uProf();uSB();rSes();setInterval(()=>{if(ON&&!SY)aSync();},60000);}
+async function vUser(){try{const d=await db.collection('users').doc(U.id).get();if(d.exists){const x=d.data();if(x.status==='disabled'){toast('⛔ Disabled!','err');doLogout();return;}U={id:d.id,...x};localStorage.setItem('wasaO2',JSON.stringify(U));}}catch(e){}}
+
+async function doLogin(){const ph=document.getElementById('lph').value.trim(),pw=document.getElementById('lpw').value.trim(),er=document.getElementById('lerr');if(!ph||!pw){er.textContent='⚠️ Fill all fields!';er.style.display='block';return;}er.style.display='none';const h=await sha(pw);
+if(!ON){try{const c=await dG('config','lastU');if(c&&c.d&&c.d.phone===ph&&c.d.ph===h){U=c.d;localStorage.setItem('wasaO2',JSON.stringify(U));toast('✅ Offline login!','ok');showApp();return;}}catch(e){}er.textContent='❌ Pehle online login karein';er.style.display='block';return;}
+sLD('Logging in...');try{const sn=await db.collection('users').where('phone','==',ph).get();if(sn.empty){hLD();er.textContent='❌ Account not found!';er.style.display='block';return;}const doc=sn.docs[0],da=doc.data();let ok=false;if(da.passHash)ok=da.passHash===h;else if(da.password)ok=da.password===pw;if(!ok){hLD();er.textContent='❌ Wrong password!';er.style.display='block';return;}if(da.status==='disabled'){hLD();er.textContent='⛔ Account disabled!';er.style.display='block';return;}
+U={id:doc.id,...da,ph:h};localStorage.setItem('wasaO2',JSON.stringify(U));await dP('config',{key:'lastU',d:U});db.collection('users').doc(doc.id).update({lastLogin:firebase.firestore.FieldValue.serverTimestamp(),passHash:h}).catch(()=>{});hLD();toast('✅ Welcome, '+da.name+'!','ok');showApp();}catch(e){hLD();er.textContent='❌ '+e.message;er.style.display='block';}}
+async function doLogout(){const p=await dA('pending');if(p.length>0&&!confirm('⚠️ '+p.length+' surveys pending! Logout?'))return;if(p.length===0&&!confirm('Logout?'))return;U=null;localStorage.removeItem('wasaO2');clearTimeout(ST);showLgn();toast('👋 Logged out!');}
+
+async function lFields(){try{if(ON){const d=await db.collection(FCOL).doc('fields').get();if(d.exists&&d.data().fields){SF=nf(d.data().fields);await dP('config',{key:'fields2',d:SF});}else SF=nf(DF);}else{const c=await dG('config','fields2');SF=c?nf(c.d):nf(DF);}}catch(e){try{const c=await dG('config','fields2');SF=c?nf(c.d):nf(DF);}catch(e2){SF=nf(DF);}}bForm();}
+
+function bForm(){const c=document.getElementById('sForm');if(!c)return;c.innerHTML=SF.map((f,i)=>{const id='f_'+i,nm=f.name,ic=f.icon,rq=f.required?'<span class="rq">*</span>':'',tp=f.type,op=f.options,fn=nm.toLowerCase();
+let ex='',ht='';
+if(fn.includes('phone')||fn.includes('mobile')||fn.includes('contact')){ex='maxlength="11" minlength="11" inputmode="numeric"';ht='<div class="hint">📱 11 digits only</div>';}
+if(fn.includes('id card')||fn.includes('cnic')){ex='maxlength="13" minlength="13" inputmode="numeric"';ht='<div class="hint">🪪 13 digits only</div>';}
+if(tp==='select'&&op&&Array.isArray(op)&&op.length)return '<div class="fg"><label>'+ic+' '+nm+' '+rq+'</label><select id="'+id+'"><option value="">-- Select --</option>'+op.map(o=>'<option value="'+o+'">'+o+'</option>').join('')+'</select></div>';
+if(tp==='textarea')return '<div class="fg"><label>'+ic+' '+nm+' '+rq+'</label><textarea id="'+id+'" placeholder="Enter '+nm.toLowerCase()+'"></textarea></div>';
+if(ex)return '<div class="fg"><label>'+ic+' '+nm+' '+rq+'</label><input type="tel" id="'+id+'" placeholder="Enter '+nm.toLowerCase()+'" '+ex+' oninput="this.value=this.value.replace(/[^0-9]/g,\'\')">'+ht+'</div>';
+if(tp==='number')return '<div class="fg"><label>'+ic+' '+nm+' '+rq+'</label><input type="number" id="'+id+'" placeholder="Enter '+nm.toLowerCase()+'" min="0"></div>';
+return '<div class="fg"><label>'+ic+' '+nm+' '+rq+'</label><input type="text" id="'+id+'" placeholder="Enter '+nm.toLowerCase()+'"></div>';}).join('');
+aSr();}
+async function aSr(){const t=AD.length;const el=document.getElementById('f_0');if(el&&SF[0]&&SF[0].name==='Sr. No.')el.value=t+1;}
+
+function getGPS(){const el=document.getElementById('gpsF');if(!el)return;el.value='Getting...';if(!navigator.geolocation){el.value='Not available';return;}navigator.geolocation.getCurrentPosition(p=>{el.value=p.coords.latitude.toFixed(6)+', '+p.coords.longitude.toFixed(6);},()=>{el.value='Denied';},{enableHighAccuracy:true,timeout:10000});}
+
+function addFile(e,t){const fs=e.target.files;if(!fs||!fs.length)return;for(let f of fs)MF.push({file:f,type:t,url:URL.createObjectURL(f)});rMP();e.target.value='';toast(t==='image'?'📸 Photo!':'🎥 Video!','ok');}
+function rMP(){document.getElementById('mPrev').innerHTML=MF.map((m,i)=>'<div class="mth">'+(m.type==='image'?'<img src="'+m.url+'">':'<video src="'+m.url+'"></video>')+'<button class="rm" onclick="rMF('+i+')">✕</button></div>').join('');}
+function rMF(i){MF.splice(i,1);rMP();}
+function oV(u,t){const c=document.getElementById('vwC');c.innerHTML=t==='image'?'<img src="'+u+'">':'<video src="'+u+'" controls autoplay style="max-width:95%;max-height:80vh;border-radius:7px;"></video>';document.getElementById('vw').classList.add('open');}
+function cV(){document.getElementById('vw').classList.remove('open');}
+function toB(f){return new Promise((r,j)=>{const rd=new FileReader();rd.onload=()=>r(rd.result);rd.onerror=j;rd.readAsDataURL(f);});}
+function b2f(b,n,m){const a=b.split(','),bs=atob(a[1]);let l=bs.length;const u=new Uint8Array(l);while(l--)u[l]=bs.charCodeAt(l);return new File([u],n,{type:m});}
+
+async function submitS(){const vals={};for(let i=0;i<SF.length;i++){const f=SF[i],el=document.getElementById('f_'+i),v=el?el.value.trim():'',fn=f.name.toLowerCase();
+if(f.required&&!v){toast('⚠️ "'+f.name+'" fill karein!','err');if(el)el.focus();return;}
+if(v&&(fn.includes('phone')||fn.includes('mobile'))&&!/^[0-9]{11}$/.test(v)){toast('⚠️ '+f.name+' = 11 digits!','err');if(el)el.focus();return;}
+if(v&&(fn.includes('id card')||fn.includes('cnic'))&&!/^[0-9]{13}$/.test(v)){toast('⚠️ '+f.name+' = 13 digits!','err');if(el)el.focus();return;}
+vals[f.name]=f.type==='number'?(v?parseFloat(v):''):v;}
+sLD('Saving...');const md=[];for(let m of MF){try{const b=await toB(m.file);md.push({b64:b,type:m.type,name:m.file.name,mime:m.file.type});}catch(e){}}
+const gps=document.getElementById('gpsF')?.value||'';const lid='l_'+Date.now()+'_'+Math.random().toString(36).substr(2,6);
+const sv={lid,...vals,media:[],mediaLocal:md,gps,officerId:U.id,officerName:U.name,officerPhone:U.phone,timestamp:new Date().toISOString(),date:new Date().toLocaleDateString('en-GB'),status:'pending',readStatus:'unread'};
+try{await dP('pending',sv);hLD();MF=[];rMP();bForm();if(ON){toast('✅ Uploading...','ok');gp('home');loadD();upOne(sv);}else{toast('💾 Saved offline!','ok');gp('home');loadD();}}catch(e){hLD();toast('❌ Failed!','err');}}
+
+async function upCld(f){const fd=new FormData();fd.append('file',f);fd.append('upload_preset',PRE);fd.append('folder','survey2-photos');const rt=f.type.startsWith('video')?'video':'image';const r=await fetch('https://api.cloudinary.com/v1_1/'+CLD+'/'+rt+'/upload',{method:'POST',body:fd});const d=await r.json();if(d.error)throw new Error(d.error.message);return{url:d.secure_url,type:rt};}
+async function upOne(sv){try{sv.status='uploading';await dP('pending',sv);loadD();const ul=[];if(sv.mediaLocal&&sv.mediaLocal.length){for(let m of sv.mediaLocal){const f=b2f(m.b64,m.name,m.mime);const r=await upCld(f);ul.push(r);}}const fn={...sv};delete fn.lid;delete fn.mediaLocal;delete fn.status;fn.media=ul;fn.createdAt=firebase.firestore.FieldValue.serverTimestamp();fn.readStatus='unread';const ref=await db.collection(COL).add(fn);fn.id=ref.id;fn.createdAt=new Date().toISOString();await dP('synced',fn);await dD('pending',sv.lid);loadD();return true;}catch(e){sv.status='failed';sv.err=e.message;await dP('pending',sv);loadD();return false;}}
+async function mSync(){if(!ON){toast('❌ No internet!','err');return;}if(SY){toast('⏳ Syncing...','err');return;}const p=await dA('pending');const ts=p.filter(x=>x.status==='pending'||x.status==='failed');if(!ts.length){toast('✅ All synced!','ok');return;}SY=true;toast('📤 Syncing...');let ok=0,fl=0;for(let x of ts){const r=await upOne(x);if(r)ok++;else fl++;}SY=false;toast(fl===0?'✅ '+ok+' uploaded!':'⚠️ '+ok+' done, '+fl+' failed',fl===0?'ok':'err');loadD();}
+async function aSync(){if(SY||!ON)return;const p=await dA('pending');const ts=p.filter(x=>x.status==='pending'||x.status==='failed');if(!ts.length)return;SY=true;for(let x of ts)await upOne(x);SY=false;}
+
+async function loadD(){try{const[pe,sy]=await Promise.all([dA('pending'),dA('synced')]);AD=[...pe.map(p=>({...p,isPend:true})),...sy.map(s=>({...s,isPend:false,status:'synced'}))];
+if(ON){try{const sn=await db.collection(COL).where('officerId','==',U.id).get();const cl=sn.docs.map(d=>({id:d.id,...d.data(),isPend:false,status:'synced'}));for(let c of cl){c.createdAt=c.createdAt?.toDate?.().toISOString()||c.timestamp||'';await dP('synced',c);}const ci=new Set(cl.map(c=>c.id));const lo=sy.filter(s=>!ci.has(s.id));AD=[...pe.map(p=>({...p,isPend:true})),...cl,...lo.map(s=>({...s,isPend:false,status:'synced'}))];
+}catch(e){}}AD.sort((a,b)=>(b.timestamp||'').localeCompare(a.timestamp||''));rHome();rData();uStats();}catch(e){}}
+
+function rHome(){const q=(document.getElementById('hSrch')?.value||'').toLowerCase();const l=document.getElementById('hList');if(!AD.length){l.innerHTML='<div class="empty"><div class="ei">📭</div><p>No surveys yet</p></div>';return;}let d=AD;if(q)d=d.filter(s=>Object.values(s).some(v=>v&&String(v).toLowerCase().includes(q)));l.innerHTML=d.slice(0,15).map((s,i)=>mkCard(s,i)).join('');}
+function rData(){const q=(document.getElementById('dSrch')?.value||'').toLowerCase();const l=document.getElementById('dList');let d=AD;if(CF!=='all')d=d.filter(s=>(s.status||'synced')===CF);if(q)d=d.filter(s=>Object.values(s).some(v=>v&&String(v).toLowerCase().includes(q)));if(!d.length){l.innerHTML='<div class="empty"><div class="ei">🔍</div><p>No results</p></div>';return;}l.innerHTML=d.map((s,i)=>mkCard(s,i)).join('');}
+
+function mkCard(s,i){const gv=k=>s[k]!==undefined&&s[k]!==''?s[k]:'-';const sr=gv('Sr. No.')||i+1;const nm=gv('Owner Name')||gv('Name')||'-';const pr=gv('Property Number');const ad=gv('Address');const md=gv('Missing Detail');const cs=gv('Current Status');const dt=s.date||'';const st=s.status||'synced';const stx={pending:'⏳ Pending',uploading:'⬆️ Uploading',failed:'❌ Failed',synced:'✅ Synced'}[st]||'✅';const stc={pending:'tp',uploading:'tu',failed:'tf',synced:'ts'}[st]||'ts';const scc={pending:'sp',failed:'sf',synced:'ss'}[st]||'ss';
+const rs=s.readStatus||'unread';
+let rsBadge=rs==='read'?'<span style="background:#10B981;color:#fff;padding:1px 5px;border-radius:6px;font-size:.45rem;font-weight:700;margin-left:4px;">✅ READ</span>':'<span style="background:#FF6F00;color:#fff;padding:1px 5px;border-radius:6px;font-size:.45rem;font-weight:700;margin-left:4px;">🔶 UNREAD</span>';
+let ph='';if(s.media&&s.media.length)ph='<div class="sc-ph">'+s.media.slice(0,4).map(m=>m.type==='image'?'<img src="'+m.url+'">':'<video src="'+m.url+'"></video>').join('')+'</div>';
+else if(s.mediaLocal&&s.mediaLocal.length)ph='<div class="sc-ph">'+s.mediaLocal.slice(0,4).map(m=>m.type==='image'?'<img src="'+m.b64+'">':'<video src="'+m.b64+'"></video>').join('')+'</div>';
+let ac='';if(st==='failed')ac='<div class="sc-ac"><button class="btn-sm btn-w" onclick="retryO(\''+s.lid+'\')">🔄 Retry</button><button class="btn-sm btn-r" style="margin:0" onclick="delP(\''+s.lid+'\')">🗑️</button></div>';
+else if(st==='pending')ac='<div class="sc-ac"><button class="btn-sm btn-p" onclick="retryO(\''+s.lid+'\')">📤 Upload</button><button class="btn-sm btn-r" style="margin:0" onclick="delP(\''+s.lid+'\')">🗑️</button></div>';
+const gps=s.gps?'<div class="sc-gps">📍 '+s.gps+'</div>':'';
+return '<div class="sc '+scc+'"><span class="st '+stc+'">'+stx+'</span><div class="sc-h"><div class="sc-sr">'+sr+'</div><div><div class="sc-nm">'+nm+' '+rsBadge+'</div><div class="sc-dt">📅 '+dt+'</div></div></div><div class="sc-d"><div class="sc-r"><span class="sc-rl">🏠 Property</span><span class="sc-rv">'+pr+'</span></div><div class="sc-r"><span class="sc-rl">📍 Address</span><span class="sc-rv">'+ad+'</span></div>'+(md!=='-'?'<div class="sc-r"><span class="sc-rl">📝 Missing Detail</span><span class="sc-rv">'+md+'</span></div>':'')+(cs!=='-'?'<div class="sc-r"><span class="sc-rl">📊 Status</span><span class="sc-rv">'+cs+'</span></div>':'')+'</div>'+gps+ph+ac+'</div>';}
+
+async function retryO(lid){const s=await dG('pending',lid);if(!s)return;if(!ON){toast('❌ No internet!','err');return;}toast('📤 Uploading...');const r=await upOne(s);toast(r?'✅ Done!':'❌ Failed!',r?'ok':'err');}
+async function delP(lid){if(!confirm('Delete?'))return;await dD('pending',lid);loadD();toast('🗑️ Deleted!','ok');}
+
+async function uStats(){const td=new Date().toLocaleDateString('en-GB');const tc=AD.filter(s=>s.date===td).length;const pe=(await dA('pending')).filter(p=>p.status==='pending'||p.status==='failed').length;
+document.getElementById('hT').textContent=AD.length;document.getElementById('hD').textContent=tc;document.getElementById('hP').textContent=pe;
+document.getElementById('pT2').textContent=AD.length;document.getElementById('pD2').textContent=tc;document.getElementById('pP2').textContent=pe;
+document.getElementById('pPI').textContent=pe;document.getElementById('pUI').textContent=AD.length-pe;
+const sb=document.getElementById('synBtn');if(pe>0){sb.classList.add('show');document.getElementById('synTx').textContent='Upload '+pe+' Pending';document.getElementById('pTag').style.display='inline';document.getElementById('pTag').textContent=pe+' Pending';document.getElementById('sDot').style.display='block';}
+else{sb.classList.remove('show');document.getElementById('pTag').style.display='none';document.getElementById('sDot').style.display='none';}}
+
+function tSB(){document.getElementById('sb').classList.toggle('open');document.getElementById('sbOv').classList.toggle('open');}
+function gp(p){document.querySelectorAll('.pg').forEach(x=>x.classList.remove('act'));document.querySelectorAll('.bn').forEach(x=>x.classList.remove('act'));document.querySelectorAll('.sb-lk').forEach(x=>x.classList.remove('act'));const el=document.getElementById('pg-'+p);if(el)el.classList.add('act');
+const nm={home:'nh',add:'na',data:'nd',profile:'np'};const nb=document.getElementById(nm[p]);if(nb)nb.classList.add('act');
+event?.target?.closest?.('.sb-lk')?.classList.add('act');
+document.getElementById('sb').classList.remove('open');document.getElementById('sbOv').classList.remove('open');
+if(p==='home')loadD();if(p==='add'){bForm();setTimeout(getGPS,500);}if(p==='data')rData();if(p==='profile')uProf();}
+function setF(f,btn){CF=f;document.querySelectorAll('.ft').forEach(t=>t.classList.remove('act'));btn.classList.add('act');rData();}
+
+function uProf(){if(!U)return;const n=U.name||'Officer';document.getElementById('pAv').textContent=n[0].toUpperCase();document.getElementById('pNm').textContent=n;document.getElementById('pPh').textContent=U.phone||'--';}
+function uSB(){if(!U)return;const n=U.name||'Officer';document.getElementById('sAv').textContent=n[0].toUpperCase();document.getElementById('sNm').textContent=n;document.getElementById('sPh').textContent=U.phone||'--';}
+
+function toast(m,t=''){const e=document.getElementById('tst');e.textContent=m;e.className='toast show '+t;setTimeout(()=>e.className='toast',3000);}
+function sLD(m){document.getElementById('ldM').textContent=m;document.getElementById('ld').classList.add('show');}
+function hLD(){document.getElementById('ld').classList.remove('show');}
+</script>
+</body>
+</html>

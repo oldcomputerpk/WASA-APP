@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#1B5E20">
+    <title>Admin Panel - Missing Details Survey</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root{--p:#1B5E20;--pd:#0D3B13;--pl:#E8F5E9;--a:#FF6F00;--al:#FFF3E0;--bg:#F1F8E9;--c:#FFF;--t:#1A1A2E;--td:#6B7280;--tl:#9CA3AF;--b:#E5E7EB;--r:#EF4444;--w:#F59E0B;--s:#10B981;--sh:0 2px 8px rgba(0,0,0,0.06);--sw:260px;}
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,sans-serif;}
+        body{background:var(--bg);color:var(--t);min-height:100vh;}
+
+        .login-w{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--p),var(--pd));padding:20px;}
+        .login-b{background:#fff;border-radius:20px;padding:32px 26px;width:100%;max-width:400px;box-shadow:0 15px 50px rgba(0,0,0,0.15);}
+        .login-ic{width:66px;height:66px;background:var(--pl);border-radius:17px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.8rem;font-weight:900;color:var(--p);}
+        .login-b h2{text-align:center;font-size:1.25rem;margin-bottom:3px;}.login-b .sub{text-align:center;color:var(--td);font-size:.8rem;margin-bottom:18px;}
+        .lin{width:100%;padding:12px 14px;border:2px solid var(--b);border-radius:10px;font-size:.9rem;outline:none;margin-bottom:10px;background:var(--bg);}
+        .lin:focus{border-color:var(--p);background:#fff;}
+        .lbtn{width:100%;padding:12px;background:var(--p);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:5px;}
+        .lbtn:hover{background:var(--pd);}.lerr{color:var(--r);font-size:.78rem;text-align:center;margin-top:8px;display:none;}
+
+        .layout{display:flex;min-height:100vh;}
+        .sb{width:var(--sw);background:#fff;border-right:1px solid var(--b);position:fixed;top:0;bottom:0;overflow-y:auto;z-index:50;box-shadow:2px 0 10px rgba(0,0,0,0.04);transition:transform .3s;}
+        .sb-h{padding:16px 18px;border-bottom:1px solid var(--b);}
+        .sb-lg{display:flex;align-items:center;gap:10px;}
+        .sb-lb{width:34px;height:34px;background:var(--p);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;font-size:.85rem;}
+        .sb-tt{font-size:.9rem;font-weight:700;color:var(--p);}.sb-su{font-size:.55rem;color:var(--td);}
+        .sb-sec{font-size:.55rem;color:var(--tl);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;padding:10px 18px 3px;}
+        .sb-lk{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;font-size:.83rem;color:var(--td);font-weight:500;border:none;background:none;width:100%;text-align:left;transition:.15s;}
+        .sb-lk:hover{background:var(--pl);color:var(--p);}
+        .sb-lk.act{background:var(--pl);color:var(--p);font-weight:700;border-right:3px solid var(--p);}
+        .sb-lk .ic{font-size:1rem;width:20px;text-align:center;}
+        .sb-lk .bg{margin-left:auto;background:var(--r);color:#fff;font-size:.5rem;padding:2px 6px;border-radius:8px;font-weight:700;}
+        .sb-div{height:1px;background:var(--b);margin:6px 18px;}.sb-lk.red{color:var(--r);}
+
+        .main{flex:1;margin-left:var(--sw);padding:20px;min-height:100vh;}
+        .mtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+        .mtop h1{font-size:1.25rem;display:flex;align-items:center;gap:8px;}
+
+        .card{background:#fff;border:1px solid var(--b);border-radius:13px;padding:16px;margin-bottom:14px;box-shadow:var(--sh);}
+        .ct{font-size:.9rem;color:var(--p);margin-bottom:11px;display:flex;align-items:center;gap:6px;font-weight:700;}
+
+        .sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:11px;margin-bottom:18px;}
+        .stc{background:#fff;border:1px solid var(--b);border-radius:13px;padding:14px;box-shadow:var(--sh);display:flex;align-items:center;gap:11px;}
+        .sti{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+        .stn{font-size:1.4rem;font-weight:800;line-height:1;}.stl{font-size:.6rem;color:var(--td);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+
+        .btn{padding:8px 15px;border:none;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:5px;}
+        .btn:hover{transform:translateY(-1px);}
+        .btn-p{background:var(--p);color:#fff;}.btn-s{background:var(--s);color:#fff;}
+        .btn-r{background:var(--r);color:#fff;}.btn-w{background:var(--w);color:#fff;}
+        .btn-o{background:transparent;color:var(--p);border:2px solid var(--p);}
+        .btn-sm{padding:5px 10px;font-size:.68rem;border-radius:6px;}
+
+        .tw{overflow-x:auto;border-radius:9px;border:1px solid var(--b);}
+        table{width:100%;border-collapse:collapse;min-width:500px;}
+        thead{background:var(--pl);}th{padding:9px 11px;text-align:left;font-size:.62rem;color:var(--p);text-transform:uppercase;letter-spacing:.5px;font-weight:700;white-space:nowrap;}
+        td{padding:9px 11px;font-size:.78rem;border-bottom:1px solid var(--b);}tbody tr:hover{background:var(--bg);}
+        tbody tr.unread-row{background:#FFF8E1;}
+        tbody tr.unread-row:hover{background:#FFF3C4;}
+        .bd{padding:3px 8px;border-radius:14px;font-size:.58rem;font-weight:700;text-transform:uppercase;}
+        .bd-ok{background:var(--al);color:var(--a);}.bd-no{background:#FEE2E2;color:var(--r);}
+        .rd-badge{padding:3px 8px;border-radius:14px;font-size:.58rem;font-weight:700;text-transform:uppercase;}
+        .rd-unread{background:#FFF3C4;color:#92400E;border:1px solid #FDE68A;}
+        .rd-read{background:#D1FAE5;color:#065F46;border:1px solid #A7F3D0;}
+
+        .fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+        .fg label{font-size:.62rem;color:var(--td);text-transform:uppercase;letter-spacing:.8px;font-weight:600;}
+        .fg input,.fg select,.fg textarea{padding:10px 11px;border:2px solid var(--b);border-radius:8px;font-size:.83rem;outline:none;background:var(--bg);transition:.2s;}
+        .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--p);background:#fff;}
+        .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:11px;}
+
+        .srow{display:flex;gap:7px;margin-bottom:11px;flex-wrap:wrap;}
+        .si{flex:1;min-width:170px;padding:9px 11px;border:2px solid var(--b);border-radius:8px;font-size:.82rem;outline:none;background:var(--bg);}
+        .si:focus{border-color:var(--p);}
+
+        .modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:center;justify-content:center;padding:15px;}
+        .modal.open{display:flex;}
+        .mbox{background:#fff;border-radius:15px;padding:22px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;animation:fu .2s;}
+        .mbox h3{font-size:1.05rem;color:var(--p);margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+        @keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+        .dov{position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:149;display:none;}.dov.open{display:block;}
+        .dp{position:fixed;top:0;right:-460px;width:440px;max-width:100%;height:100vh;background:#fff;box-shadow:-4px 0 20px rgba(0,0,0,0.08);z-index:150;overflow-y:auto;transition:right .3s;padding:20px;}
+        .dp.open{right:0;}
+        .drow{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--b);gap:10px;}
+        .dl{font-size:.7rem;color:var(--td);font-weight:600;flex-shrink:0;}.dv{font-size:.78rem;font-weight:600;text-align:right;word-break:break-word;}
+
+        .mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(95px,1fr));gap:7px;margin-top:9px;}
+        .mi{aspect-ratio:1;border-radius:9px;overflow:hidden;border:1px solid var(--b);cursor:pointer;}
+        .mi img,.mi video{width:100%;height:100%;object-fit:cover;}
+
+        .vw{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:300;display:none;align-items:center;justify-content:center;}.vw.open{display:flex;}
+        .vw img,.vw video{max-width:90%;max-height:85vh;border-radius:8px;}
+        .vx{position:absolute;top:10px;right:12px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+        .fi{display:flex;align-items:center;gap:5px;padding:7px;background:var(--bg);border-radius:7px;margin-bottom:5px;border:1px solid var(--b);flex-wrap:wrap;}
+        .fi input,.fi select{padding:6px 7px;border:1px solid var(--b);border-radius:5px;font-size:.75rem;outline:none;background:#fff;}
+        .fi input:focus{border-color:var(--p);}
+        .frm{width:26px;height:26px;border-radius:5px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.1);color:var(--r);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;}
+        .afb{width:100%;padding:8px;background:var(--pl);border:2px dashed var(--p);border-radius:8px;color:var(--p);font-size:.8rem;font-weight:600;cursor:pointer;margin-top:5px;}
+
+        .cs{border:1px solid var(--b);border-radius:11px;padding:14px;margin-bottom:12px;background:#fff;}
+        .cs h4{font-size:.75rem;color:var(--p);margin-bottom:9px;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--b);padding-bottom:5px;}
+        .crow{display:flex;align-items:center;justify-content:space-between;padding:5px 0;}
+        .crow label{font-size:.75rem;color:var(--td);}
+        .crow input[type="color"]{width:38px;height:28px;border:2px solid var(--b);border-radius:5px;cursor:pointer;background:none;padding:1px;}
+
+        .pg{display:none;animation:fu .2s;}.pg.act{display:block;}
+
+        .toast{position:fixed;top:15px;right:15px;background:var(--t);color:#fff;padding:11px 18px;border-radius:9px;font-size:.78rem;font-weight:600;opacity:0;transition:.3s;z-index:9999;box-shadow:0 5px 20px rgba(0,0,0,0.12);}
+        .toast.show{opacity:1;}.toast.err{background:var(--r);}.toast.ok{background:var(--s);}
+
+        .ld{position:fixed;inset:0;background:rgba(255,255,255,0.9);z-index:400;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;}.ld.show{display:flex;}
+        .ldsp{width:34px;height:34px;border:3px solid var(--b);border-top-color:var(--p);border-radius:50%;animation:spin .7s linear infinite;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        .ham{display:none;background:none;border:none;font-size:1.3rem;cursor:pointer;padding:5px;color:var(--t);}
+        .sov{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:none;}.sov.open{display:block;}
+        @media(max-width:900px){.sb{transform:translateX(-100%);z-index:201;}.sb.open{transform:translateX(0);}.main{margin-left:0;}.ham{display:block;}.dp{width:100%;}}
+
+        .ft-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+        .ft-tab{padding:6px 14px;border:2px solid var(--b);border-radius:20px;background:#fff;color:var(--td);font-size:.72rem;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:5px;}
+        .ft-tab.act{background:var(--p);color:#fff;border-color:var(--p);}
+        .ft-tab .cnt{background:rgba(255,255,255,0.3);padding:0 6px;border-radius:8px;font-size:.65rem;}
+        .ft-tab:not(.act) .cnt{background:var(--pl);color:var(--p);}
+    </style>
+</head>
+<body>
+
+<div class="login-w" id="loginW">
+    <div class="login-b">
+        <div class="login-ic">S2</div>
+        <h2>Survey Phase 2 Admin</h2>
+        <p class="sub">Missing Details Management</p>
+        <input class="lin" type="tel" id="aP" placeholder="📞 Phone Number">
+        <input class="lin" type="password" id="aPw" placeholder="🔒 Password">
+        <button class="lbtn" onclick="aLogin()">Login →</button>
+        <p class="lerr" id="aE"></p>
+    </div>
+</div>
+
+<div class="layout" id="layout" style="display:none;">
+    <div class="sov" id="sov" onclick="tSB()"></div>
+
+    <div class="sb" id="sb">
+        <div class="sb-h">
+            <div class="sb-lg">
+                <div class="sb-lb">S2</div>
+                <div><div class="sb-tt">Survey Phase 2</div><div class="sb-su">Missing Details Admin</div></div>
+            </div>
+        </div>
+        <div class="sb-sec">Main</div>
+        <button class="sb-lk act" onclick="go('dashboard',this)"><span class="ic">📊</span>Dashboard</button>
+        <button class="sb-lk" onclick="go('surveys',this)"><span class="ic">📋</span>All Surveys<span class="bg" id="unreadBadge" style="display:none">0</span></button>
+        <div class="sb-sec">Management</div>
+        <button class="sb-lk" onclick="go('users',this)"><span class="ic">👥</span>Users</button>
+        <button class="sb-lk" onclick="go('fields',this)"><span class="ic">📝</span>Form Fields</button>
+        <button class="sb-lk" onclick="go('customize',this)"><span class="ic">🎨</span>Customize</button>
+        <button class="sb-lk" onclick="go('settings',this)"><span class="ic">⚙️</span>Settings</button>
+        <div class="sb-sec">Data</div>
+        <button class="sb-lk" onclick="go('export',this)"><span class="ic">📤</span>Export</button>
+        <button class="sb-lk" onclick="go('backup',this)"><span class="ic">💾</span>Backup</button>
+        <div class="sb-div"></div>
+        <button class="sb-lk red" onclick="aLogout()"><span class="ic">🚪</span>Logout</button>
+    </div>
+
+    <div class="main">
+        <div class="mtop">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <button class="ham" onclick="tSB()">☰</button>
+                <h1 id="pgTitle">📊 Dashboard</h1>
+            </div>
+        </div>
+
+        <div class="pg act" id="p-dashboard">
+            <div class="sg" id="statsGrid"></div>
+            <div class="card"><div class="ct">📋 Recent Surveys (Unread first)</div>
+                <div class="tw"><table><thead id="rHead"></thead><tbody id="rBody"></tbody></table></div>
+            </div>
+        </div>
+
+        <div class="pg" id="p-surveys">
+            <div class="ft-tabs">
+                <button class="ft-tab act" onclick="setRF('all',this)">📋 All <span class="cnt" id="cntAll">0</span></button>
+                <button class="ft-tab" onclick="setRF('unread',this)">🔶 Unread <span class="cnt" id="cntUnread">0</span></button>
+                <button class="ft-tab" onclick="setRF('read',this)">✅ Read <span class="cnt" id="cntRead">0</span></button>
+            </div>
+            <div class="srow">
+                <input class="si" id="sSrch" placeholder="🔍 Search..." oninput="rSurv()">
+                <select class="si" style="max-width:180px;" id="sFilt" onchange="rSurv()"><option value="">All Officers</option></select>
+                <input class="si" type="date" style="max-width:160px;" id="sFrom" onchange="rSurv()">
+                <input class="si" type="date" style="max-width:160px;" id="sTo" onchange="rSurv()">
+                <button class="btn btn-s" onclick="markAllRead()">✅ Mark All as Read</button>
+            </div>
+            <div class="card"><div class="tw"><table><thead id="sHead"></thead><tbody id="sBody"></tbody></table></div></div>
+        </div>
+
+        <div class="pg" id="p-users">
+            <div class="srow">
+                <input class="si" id="uSrch" placeholder="🔍 Search users..." oninput="rUsers()">
+                <button class="btn btn-p" onclick="oAddU()">➕ Add User</button>
+            </div>
+            <div class="card"><div class="tw"><table>
+                <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Role</th><th>Status</th><th>Area</th><th>Surveys</th><th>Actions</th></tr></thead>
+                <tbody id="uBody"></tbody>
+            </table></div></div>
+        </div>
+
+        <div class="pg" id="p-fields">
+            <div class="card">
+                <div class="ct">📝 Survey Form Fields</div>
+                <p style="color:var(--td);font-size:.78rem;margin-bottom:11px;">Missing details survey form fields - Officers ke form mein yeh dikhenge</p>
+                <div id="fList"></div>
+                <button class="afb" onclick="addFld()">＋ Add New Field</button>
+                <div style="margin-top:14px;display:flex;gap:7px;">
+                    <button class="btn btn-p" onclick="saveFlds()">💾 Save Fields</button>
+                    <button class="btn btn-o" onclick="resetFlds()">🔄 Reset Default</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="pg" id="p-customize">
+            <div class="card">
+                <div class="ct">🎨 Customization</div>
+                <div class="cs">
+                    <h4>🎨 Colors</h4>
+                    <div class="crow"><label>Primary</label><input type="color" id="cP" value="#1B5E20" onchange="prvC()"></div>
+                    <div class="crow"><label>Accent</label><input type="color" id="cA" value="#FF6F00" onchange="prvC()"></div>
+                    <div class="crow"><label>Background</label><input type="color" id="cB" value="#F1F8E9" onchange="prvC()"></div>
+                    <div class="crow"><label>Card BG</label><input type="color" id="cC" value="#FFFFFF" onchange="prvC()"></div>
+                    <div class="crow"><label>Text</label><input type="color" id="cT" value="#1A1A2E" onchange="prvC()"></div>
+                </div>
+                <div class="cs">
+                    <h4>🔤 Font</h4>
+                    <div class="fg"><label>Font Family</label>
+                        <select id="cFn" onchange="prvF()">
+                            <option value="'Segoe UI',Roboto,sans-serif">Segoe UI</option>
+                            <option value="Arial,sans-serif">Arial</option>
+                            <option value="Georgia,serif">Georgia</option>
+                            <option value="Verdana,sans-serif">Verdana</option>
+                            <option value="Tahoma,sans-serif">Tahoma</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="cs">
+                    <h4>🏷️ Branding</h4>
+                    <div class="fg"><label>App Title</label><input type="text" id="cTt" value="Survey Phase 2"></div>
+                    <div class="fg"><label>Subtitle</label><input type="text" id="cSb" value="Missing Details Admin"></div>
+                </div>
+                <div style="display:flex;gap:7px;margin-top:12px;">
+                    <button class="btn btn-p" onclick="saveCust()">💾 Save</button>
+                    <button class="btn btn-o" onclick="rstCust()">🔄 Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="pg" id="p-settings">
+            <div class="card">
+                <div class="ct">🔐 Change Admin Password</div>
+                <div class="fgrid">
+                    <div class="fg"><label>Current Password</label><input type="password" id="apO"></div>
+                    <div class="fg"><label>New Password</label><input type="password" id="apN"></div>
+                </div>
+                <button class="btn btn-p" style="margin-top:8px;" onclick="chAdmPw()">💾 Change</button>
+            </div>
+            <div class="card">
+                <div class="ct">🔑 Change Officer Password</div>
+                <div class="fgrid">
+                    <div class="fg"><label>Officer</label><select id="opS"><option value="">Select...</option></select></div>
+                    <div class="fg"><label>New Password</label><input type="password" id="opN"></div>
+                </div>
+                <button class="btn btn-p" style="margin-top:8px;" onclick="chOffPw()">💾 Change Officer Password</button>
+            </div>
+        </div>
+
+        <div class="pg" id="p-export">
+            <div class="card">
+                <div class="ct">📤 Export Data</div>
+                <div class="fgrid" style="margin-bottom:12px;">
+                    <div class="fg"><label>Officer</label><select id="exO"><option value="">All</option></select></div>
+                    <div class="fg"><label>Status</label><select id="exSt"><option value="">All Status</option><option value="unread">🔶 Unread Only</option><option value="read">✅ Read Only</option></select></div>
+                    <div class="fg"><label>From Date</label><input type="date" id="exF"></div>
+                    <div class="fg"><label>To Date</label><input type="date" id="exT"></div>
+                </div>
+                <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                    <button class="btn btn-r" onclick="exPDF()">📄 PDF</button>
+                    <button class="btn btn-s" onclick="exCSV()">📊 CSV / Excel</button>
+                    <button class="btn btn-p" onclick="exWord()">📝 Word</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="pg" id="p-backup">
+            <div class="card">
+                <div class="ct">💾 Backup & Restore</div>
+                <p style="color:var(--td);font-size:.78rem;margin-bottom:11px;">JSON backup for surveys & users</p>
+                <button class="btn btn-p" onclick="doBk()" style="margin-bottom:8px;">📥 Download Backup</button>
+                <div class="fg">
+                    <label>📤 Restore from Backup</label>
+                    <input type="file" accept=".json" id="rF" style="padding:6px;">
+                </div>
+                <button class="btn btn-w" style="margin-top:7px;" onclick="doRst()">📤 Restore Data</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="uM">
+    <div class="mbox">
+        <h3 id="uMT">➕ Add User</h3>
+        <div class="fgrid">
+            <div class="fg"><label>Name *</label><input type="text" id="umN"></div>
+            <div class="fg"><label>Phone *</label><input type="tel" id="umP"></div>
+            <div class="fg"><label>Password *</label><input type="text" id="umPw"></div>
+            <div class="fg"><label>Role *</label><select id="umR"><option value="officer">Officer</option><option value="admin">Admin</option></select></div>
+            <div class="fg"><label>Status</label><select id="umS"><option value="active">Active</option><option value="disabled">Disabled</option></select></div>
+            <div class="fg"><label>Area</label><input type="text" id="umA"></div>
+        </div>
+        <div style="display:flex;gap:7px;margin-top:14px;">
+            <button class="btn btn-p" onclick="saveU()">💾 Save</button>
+            <button class="btn btn-o" onclick="cUM()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div class="dov" id="dOv" onclick="cD()"></div>
+<div class="dp" id="dP">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="color:var(--p);font-size:1rem;" id="dTitle">📋 Survey Details</h3>
+        <button class="btn btn-sm btn-o" onclick="cD()">✕</button>
+    </div>
+    <div id="dC"></div>
+</div>
+
+<div class="vw" id="vw">
+    <button class="vx" onclick="cV()">✕</button>
+    <div id="vwC"></div>
+</div>
+
+<div class="ld" id="ld">
+    <div class="ldsp"></div>
+    <div style="color:var(--td);font-weight:600;" id="ldM">Loading...</div>
+</div>
+
+<div class="toast" id="tst"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({apiKey:"AIzaSyC6-JqJHut8FbFhA5_wLVdFUt1rpuT9HME",authDomain:"data-center-wasa.firebaseapp.com",projectId:"data-center-wasa",storageBucket:"data-center-wasa.firebasestorage.app",messagingSenderId:"78737102659",appId:"1:78737102659:web:33a484a19872087ac2c1f6"});
+const db=firebase.firestore();
+
+// Collections - different from first app
+const COL='surveys2';
+const FCOL='settings2';
+
+let ADM=null,SUR=[],USR=[],FLD=[],eUID=null,eSID=null,ST=null,readFilter='all';
+const STO=30*60*1000;
+
+const DF=[
+{name:'Sr. No.',type:'number',icon:'#️⃣',required:true},
+{name:'Property Number',type:'text',icon:'🏠',required:true},
+{name:'Owner Name',type:'text',icon:'👤',required:true},
+{name:'Address',type:'text',icon:'📍',required:true},
+{name:'Missing Detail',type:'textarea',icon:'📝',required:true},
+{name:'Current Status',type:'select',icon:'📊',required:true,options:['Pending','In Progress','Completed','Rejected']},
+{name:'Priority',type:'select',icon:'🔴',required:false,options:['High','Medium','Low']},
+{name:'ID Card',type:'text',icon:'🪪',required:false},
+{name:'Phone',type:'tel',icon:'📞',required:false},
+{name:'Comment',type:'textarea',icon:'💬',required:false}
+];
+
+async function sha(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');}
+
+function nf(arr){if(!arr||!Array.isArray(arr))return DF;return arr.map(f=>({name:f.name||f.n||'Field',type:f.type||f.t||'text',icon:f.icon||f.i||'📌',required:f.required!==undefined?f.required:(f.r!==undefined?f.r:false),options:f.options||f.o||null}));}
+
+function gVal(s,fn){if(s[fn]!==undefined&&s[fn]!=='')return s[fn];const lower=fn.toLowerCase();for(let k in s){if(k.toLowerCase()===lower&&s[k]!==undefined&&s[k]!=='')return s[k];}const clean=fn.replace(/[\s.]/g,'').toLowerCase();for(let k in s){if(k.replace(/[\s.]/g,'').toLowerCase()===clean&&s[k]!==undefined&&s[k]!=='')return s[k];}return '-';}
+
+function rSes(){clearTimeout(ST);ST=setTimeout(()=>{if(ADM){toast('⏰ Session expired!','err');fOut();}},STO);}
+document.addEventListener('click',rSes);
+function fOut(){ADM=null;localStorage.removeItem('wasaA2');document.getElementById('loginW').style.display='flex';document.getElementById('layout').style.display='none';}
+
+window.onload=async function(){await fSetup();const s=localStorage.getItem('wasaA2');if(s){ADM=JSON.parse(s);await verify();}loadCust();};
+
+async function fSetup(){try{const sn=await db.collection('users').where('role','==','admin').get();if(sn.empty){const h=await sha('admin123');await db.collection('users').add({name:'Admin',phone:'03001234567',passHash:h,password:'admin123',role:'admin',status:'active',area:'Head Office',createdAt:firebase.firestore.FieldValue.serverTimestamp()});}}catch(e){}}
+async function verify(){try{const d=await db.collection('users').doc(ADM.id).get();if(d.exists&&d.data().role==='admin'&&d.data().status==='active'){ADM={id:d.id,...d.data()};localStorage.setItem('wasaA2',JSON.stringify(ADM));showAdm();}else fOut();}catch(e){showAdm();}}
+
+async function aLogin(){const p=document.getElementById('aP').value.trim(),pw=document.getElementById('aPw').value.trim(),er=document.getElementById('aE');if(!p||!pw){er.textContent='⚠️ Fill all!';er.style.display='block';return;}er.style.display='none';sLD('Logging in...');
+try{const sn=await db.collection('users').where('phone','==',p).get();if(sn.empty){hLD();er.textContent='❌ Not found!';er.style.display='block';return;}
+const doc=sn.docs[0],da=doc.data();const h=await sha(pw);let ok=false;if(da.passHash)ok=da.passHash===h;else if(da.password)ok=da.password===pw;
+if(!ok){hLD();er.textContent='❌ Wrong password!';er.style.display='block';return;}
+if(da.role!=='admin'){hLD();er.textContent='⛔ Admin only!';er.style.display='block';return;}
+if(da.status==='disabled'){hLD();er.textContent='⛔ Disabled!';er.style.display='block';return;}
+ADM={id:doc.id,...da,passHash:h};localStorage.setItem('wasaA2',JSON.stringify(ADM));
+db.collection('users').doc(doc.id).update({lastLogin:firebase.firestore.FieldValue.serverTimestamp(),passHash:h}).catch(()=>{});
+hLD();toast('✅ Welcome!','ok');showAdm();}catch(e){hLD();er.textContent='❌ '+e.message;er.style.display='block';}}
+
+function aLogout(){if(!confirm('Logout?'))return;ADM=null;localStorage.removeItem('wasaA2');clearTimeout(ST);document.getElementById('loginW').style.display='flex';document.getElementById('layout').style.display='none';toast('👋 Logged out!');}
+function showAdm(){document.getElementById('loginW').style.display='none';document.getElementById('layout').style.display='flex';rSes();loadAll();}
+
+async function loadAll(){sLD('Loading...');try{await Promise.all([lSurv(),lUsr(),lFldSet()]);}catch(e){}hLD();rDash();updateUnreadBadge();}
+async function lSurv(){try{const s=await db.collection(COL).orderBy('createdAt','desc').get();SUR=s.docs.map(d=>({id:d.id,...d.data()}));}catch(e){try{const s=await db.collection(COL).get();SUR=s.docs.map(d=>({id:d.id,...d.data()}));SUR.sort((a,b)=>(b.timestamp||'').localeCompare(a.timestamp||''));}catch(e2){}}}
+async function lUsr(){const s=await db.collection('users').get();USR=s.docs.map(d=>({id:d.id,...d.data()}));uFilt();}
+async function lFldSet(){try{const d=await db.collection(FCOL).doc('fields').get();if(d.exists&&d.data().fields)FLD=nf(d.data().fields);else FLD=nf(DF);}catch(e){FLD=nf(DF);}}
+function uFilt(){const of=USR.filter(u=>u.role==='officer');const h='<option value="">All Officers</option>'+of.map(o=>'<option value="'+o.id+'">'+o.name+' ('+o.phone+')</option>').join('');['sFilt','exO','opS'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=h;});}
+
+function updateUnreadBadge(){
+    const unread=SUR.filter(s=>(s.readStatus||'unread')==='unread').length;
+    const b=document.getElementById('unreadBadge');
+    if(unread>0){b.style.display='inline';b.textContent=unread;}
+    else b.style.display='none';
+}
+
+function rDash(){const td=new Date().toLocaleDateString('en-GB');const tc=SUR.filter(s=>s.date===td).length;const of=USR.filter(u=>u.role==='officer').length;const unread=SUR.filter(s=>(s.readStatus||'unread')==='unread').length;const read=SUR.filter(s=>s.readStatus==='read').length;
+document.getElementById('statsGrid').innerHTML='<div class="stc"><div class="sti" style="background:var(--pl);">📋</div><div><div class="stn">'+SUR.length+'</div><div class="stl">Total Surveys</div></div></div><div class="stc"><div class="sti" style="background:#FFF3C4;">🔶</div><div><div class="stn" style="color:#92400E;">'+unread+'</div><div class="stl">Unread</div></div></div><div class="stc"><div class="sti" style="background:#D1FAE5;">✅</div><div><div class="stn" style="color:#065F46;">'+read+'</div><div class="stl">Read</div></div></div><div class="stc"><div class="sti" style="background:var(--al);">📅</div><div><div class="stn">'+tc+'</div><div class="stl">Today</div></div></div><div class="stc"><div class="sti" style="background:#EDE9FE;">👥</div><div><div class="stn">'+of+'</div><div class="stl">Officers</div></div></div>';
+// Show unread first
+const sortedSur=[...SUR].sort((a,b)=>{const ar=(a.readStatus||'unread')==='unread'?0:1;const br=(b.readStatus||'unread')==='unread'?0:1;return ar-br;});
+const cols=['Sr. No.','Property Number','Owner Name','Missing Detail','Current Status'];
+document.getElementById('rHead').innerHTML='<tr><th>#</th><th>Status</th>'+cols.map(c=>'<th>'+c+'</th>').join('')+'<th>Officer</th><th>Date</th><th>Action</th></tr>';
+document.getElementById('rBody').innerHTML=sortedSur.slice(0,10).map((s,i)=>{const rs=(s.readStatus||'unread');const rsBadge='<span class="rd-badge rd-'+rs+'">'+(rs==='read'?'✅ READ':'🔶 UNREAD')+'</span>';return '<tr class="'+(rs==='unread'?'unread-row':'')+'"><td>'+(i+1)+'</td><td>'+rsBadge+'</td>'+cols.map(c=>'<td>'+(gVal(s,c))+'</td>').join('')+'<td>'+(s.officerName||'-')+'</td><td>'+(s.date||'-')+'</td><td><button class="btn btn-sm btn-o" onclick="viewS(\''+s.id+'\')">👁️ View</button></td></tr>';}).join('')||'<tr><td colspan="20" style="text-align:center;padding:20px;color:var(--td);">No data</td></tr>';}
+
+function setRF(f,btn){readFilter=f;document.querySelectorAll('.ft-tab').forEach(t=>t.classList.remove('act'));btn.classList.add('act');rSurv();}
+
+function rSurv(){const q=document.getElementById('sSrch').value.toLowerCase();const of=document.getElementById('sFilt').value;const df=document.getElementById('sFrom').value;const dt=document.getElementById('sTo').value;
+let d=[...SUR];if(q)d=d.filter(s=>Object.values(s).some(v=>v&&String(v).toLowerCase().includes(q)));
+if(of)d=d.filter(s=>s.officerId===of);if(df)d=d.filter(s=>s.timestamp&&s.timestamp>=df);if(dt)d=d.filter(s=>s.timestamp&&s.timestamp<=dt+'T23:59:59');
+
+// Update counts
+document.getElementById('cntAll').textContent=SUR.length;
+document.getElementById('cntUnread').textContent=SUR.filter(s=>(s.readStatus||'unread')==='unread').length;
+document.getElementById('cntRead').textContent=SUR.filter(s=>s.readStatus==='read').length;
+
+// Apply read filter
+if(readFilter==='unread')d=d.filter(s=>(s.readStatus||'unread')==='unread');
+if(readFilter==='read')d=d.filter(s=>s.readStatus==='read');
+
+// Sort: unread first
+d.sort((a,b)=>{const ar=(a.readStatus||'unread')==='unread'?0:1;const br=(b.readStatus||'unread')==='unread'?0:1;return ar-br;});
+
+const cols=FLD.slice(0,5).map(f=>f.name);
+document.getElementById('sHead').innerHTML='<tr><th>#</th><th>Status</th>'+cols.map(c=>'<th>'+c+'</th>').join('')+'<th>Officer</th><th>Date</th><th>GPS</th><th>Actions</th></tr>';
+document.getElementById('sBody').innerHTML=d.map((s,i)=>{const rs=(s.readStatus||'unread');const rsBadge='<span class="rd-badge rd-'+rs+'">'+(rs==='read'?'✅ READ':'🔶 UNREAD')+'</span>';const toggleBtn=rs==='read'?'<button class="btn btn-sm btn-w" onclick="toggleRead(\''+s.id+'\',\'unread\')">↩️ Mark Unread</button>':'<button class="btn btn-sm btn-s" onclick="toggleRead(\''+s.id+'\',\'read\')">✅ Mark Read</button>';return '<tr class="'+(rs==='unread'?'unread-row':'')+'"><td>'+(i+1)+'</td><td>'+rsBadge+'</td>'+cols.map(c=>'<td>'+(gVal(s,c))+'</td>').join('')+'<td>'+(s.officerName||'-')+'</td><td>'+(s.date||'-')+'</td><td style="font-size:.6rem;">'+(s.gps||'-')+'</td><td><button class="btn btn-sm btn-o" onclick="viewS(\''+s.id+'\')">👁️</button> <button class="btn btn-sm btn-p" onclick="editS(\''+s.id+'\')">✏️</button> '+toggleBtn+' <button class="btn btn-sm btn-r" onclick="delS(\''+s.id+'\')">🗑️</button></td></tr>';}).join('')||'<tr><td colspan="20" style="text-align:center;padding:20px;color:var(--td);">No results</td></tr>';}
+
+async function toggleRead(id,newStatus){
+    sLD('Updating...');
+    try{
+        await db.collection(COL).doc(id).update({
+            readStatus:newStatus,
+            readBy:newStatus==='read'?ADM.name:null,
+            readAt:newStatus==='read'?firebase.firestore.FieldValue.serverTimestamp():null
+        });
+        const i=SUR.findIndex(s=>s.id===id);
+        if(i>-1){SUR[i].readStatus=newStatus;if(newStatus==='read'){SUR[i].readBy=ADM.name;}}
+        toast(newStatus==='read'?'✅ Marked as Read!':'🔶 Marked as Unread!','ok');
+        rSurv();rDash();updateUnreadBadge();
+    }catch(e){toast('❌ '+e.message,'err');}
+    hLD();
+}
+
+async function markAllRead(){
+    const unreadItems=SUR.filter(s=>(s.readStatus||'unread')==='unread');
+    if(!unreadItems.length){toast('✅ Sab already read hain!','ok');return;}
+    if(!confirm('Mark ALL '+unreadItems.length+' unread surveys as READ?'))return;
+    sLD('Updating '+unreadItems.length+' surveys...');
+    try{
+        const batch=db.batch();
+        for(let s of unreadItems){
+            const ref=db.collection(COL).doc(s.id);
+            batch.update(ref,{readStatus:'read',readBy:ADM.name,readAt:firebase.firestore.FieldValue.serverTimestamp()});
+        }
+        await batch.commit();
+        for(let s of unreadItems){s.readStatus='read';s.readBy=ADM.name;}
+        toast('✅ '+unreadItems.length+' surveys marked as read!','ok');
+        rSurv();rDash();updateUnreadBadge();
+    }catch(e){toast('❌ '+e.message,'err');}
+    hLD();
+}
+
+function viewS(id){const s=SUR.find(x=>x.id===id);if(!s){toast('Not found!','err');return;}
+document.getElementById('dTitle').textContent='📋 Survey Details';
+const rs=(s.readStatus||'unread');
+const rsBadge='<span class="rd-badge rd-'+rs+'">'+(rs==='read'?'✅ READ':'🔶 UNREAD')+'</span>';
+const toggleBtn=rs==='read'?'<button class="btn btn-sm btn-w" onclick="toggleRead(\''+id+'\',\'unread\');cD();">↩️ Mark Unread</button>':'<button class="btn btn-sm btn-s" onclick="toggleRead(\''+id+'\',\'read\');cD();">✅ Mark as Read</button>';
+let h='<div style="margin-bottom:12px;padding:10px;background:var(--bg);border-radius:8px;display:flex;justify-content:space-between;align-items:center;">Status: '+rsBadge+' '+toggleBtn+'</div>';
+h+='<div style="display:flex;gap:7px;margin-bottom:14px;">';
+h+='<button class="btn btn-sm btn-p" onclick="editS(\''+id+'\')">✏️ Edit</button>';
+h+='<button class="btn btn-sm btn-r" onclick="delS(\''+id+'\');cD();">🗑️ Delete</button>';
+h+='</div>';
+FLD.forEach(f=>{const v=gVal(s,f.name);if(v!==undefined&&v!==''&&v!=='-')h+='<div class="drow"><span class="dl">'+f.icon+' '+f.name+'</span><span class="dv">'+v+'</span></div>';});
+h+='<div class="drow"><span class="dl">👤 Officer</span><span class="dv">'+(s.officerName||'-')+'</span></div>';
+h+='<div class="drow"><span class="dl">📞 Officer Phone</span><span class="dv">'+(s.officerPhone||'-')+'</span></div>';
+h+='<div class="drow"><span class="dl">📅 Date</span><span class="dv">'+(s.date||'-')+'</span></div>';
+if(s.gps)h+='<div class="drow"><span class="dl">📍 GPS</span><span class="dv">'+s.gps+'</span></div>';
+if(s.readBy)h+='<div class="drow"><span class="dl">✅ Read By</span><span class="dv">'+s.readBy+'</span></div>';
+if(s.media&&s.media.length){h+='<h4 style="color:var(--p);margin:12px 0 7px;font-size:.85rem;">📸 Media</h4><div class="mg">';h+=s.media.map(m=>m.type==='image'?'<div class="mi"><img src="'+m.url+'" onclick="oV(\''+m.url+'\',\'image\')"></div>':'<div class="mi"><video src="'+m.url+'" onclick="oV(\''+m.url+'\',\'video\')"></video></div>').join('');h+='</div>';}
+document.getElementById('dC').innerHTML=h;
+document.getElementById('dP').classList.add('open');document.getElementById('dOv').classList.add('open');}
+
+function editS(id){const s=SUR.find(x=>x.id===id);if(!s){toast('Not found!','err');return;}eSID=id;
+document.getElementById('dTitle').textContent='✏️ Edit Survey';
+let h='<div class="fgrid">';
+FLD.forEach((f,i)=>{let v=gVal(s,f.name);if(v==='-')v='';const eid='es_'+i;
+if(f.type==='select'&&f.options&&Array.isArray(f.options)){h+='<div class="fg"><label>'+f.icon+' '+f.name+'</label><select id="'+eid+'"><option value="">-- Select --</option>'+f.options.map(o=>'<option value="'+o+'" '+(o===v?'selected':'')+'>'+o+'</option>').join('')+'</select></div>';}
+else if(f.type==='textarea'){h+='<div class="fg" style="grid-column:1/-1;"><label>'+f.icon+' '+f.name+'</label><textarea id="'+eid+'" rows="3">'+v+'</textarea></div>';}
+else{const it=f.type==='number'?'number':'text';h+='<div class="fg"><label>'+f.icon+' '+f.name+'</label><input type="'+it+'" id="'+eid+'" value="'+v+'"></div>';}});
+h+='</div><div style="display:flex;gap:7px;margin-top:15px;"><button class="btn btn-p" onclick="saveES()">💾 Save Changes</button><button class="btn btn-o" onclick="cD()">Cancel</button></div>';
+document.getElementById('dC').innerHTML=h;
+document.getElementById('dP').classList.add('open');document.getElementById('dOv').classList.add('open');}
+
+async function saveES(){if(!eSID)return;const upd={};for(let i=0;i<FLD.length;i++){const f=FLD[i];const el=document.getElementById('es_'+i);if(el){let v=el.value.trim();if(f.type==='number')v=v?parseFloat(v):'';upd[f.name]=v;}}
+upd.updatedAt=firebase.firestore.FieldValue.serverTimestamp();upd.editedBy=ADM.name;
+sLD('Saving...');try{await db.collection(COL).doc(eSID).update(upd);const i=SUR.findIndex(s=>s.id===eSID);if(i>-1)SUR[i]={...SUR[i],...upd};toast('✅ Updated!','ok');cD();rSurv();rDash();eSID=null;}catch(e){toast('❌ '+e.message,'err');}hLD();}
+
+function cD(){document.getElementById('dP').classList.remove('open');document.getElementById('dOv').classList.remove('open');eSID=null;}
+
+async function delS(id){if(!confirm('Delete this survey permanently?'))return;sLD('Deleting...');try{await db.collection(COL).doc(id).delete();SUR=SUR.filter(s=>s.id!==id);rSurv();rDash();updateUnreadBadge();toast('🗑️ Deleted!','ok');}catch(e){toast('❌ '+e.message,'err');}hLD();}
+
+function rUsers(){const q=document.getElementById('uSrch').value.toLowerCase();let d=USR;if(q)d=d.filter(u=>(u.name||'').toLowerCase().includes(q)||(u.phone||'').includes(q));
+document.getElementById('uBody').innerHTML=d.map((u,i)=>{const sc=SUR.filter(s=>s.officerId===u.id).length;return '<tr><td>'+(i+1)+'</td><td><strong>'+(u.name||'-')+'</strong></td><td>'+(u.phone||'-')+'</td><td>'+(u.role||'-')+'</td><td><span class="bd '+(u.status==='active'?'bd-ok':'bd-no')+'">'+(u.status||'active')+'</span></td><td>'+(u.area||'-')+'</td><td>'+sc+'</td><td><button class="btn btn-sm btn-o" onclick="editU(\''+u.id+'\')">✏️</button> <button class="btn btn-sm btn-r" onclick="delU(\''+u.id+'\')">🗑️</button></td></tr>';}).join('')||'<tr><td colspan="8" style="text-align:center;padding:20px;">No users</td></tr>';}
+
+function oAddU(){eUID=null;document.getElementById('uMT').textContent='➕ Add User';['umN','umP','umPw','umA'].forEach(id=>document.getElementById(id).value='');document.getElementById('umR').value='officer';document.getElementById('umS').value='active';document.getElementById('uM').classList.add('open');}
+function editU(id){const u=USR.find(x=>x.id===id);if(!u)return;eUID=id;document.getElementById('uMT').textContent='✏️ Edit User';document.getElementById('umN').value=u.name||'';document.getElementById('umP').value=u.phone||'';document.getElementById('umPw').value=u.password||'';document.getElementById('umR').value=u.role||'officer';document.getElementById('umS').value=u.status||'active';document.getElementById('umA').value=u.area||'';document.getElementById('uM').classList.add('open');}
+function cUM(){document.getElementById('uM').classList.remove('open');eUID=null;}
+
+async function saveU(){const n=document.getElementById('umN').value.trim(),p=document.getElementById('umP').value.trim(),pw=document.getElementById('umPw').value.trim(),r=document.getElementById('umR').value,st=document.getElementById('umS').value,a=document.getElementById('umA').value.trim();
+if(!n||!p||!pw){toast('⚠️ Name, Phone, Password required!','err');return;}
+if(USR.find(u=>u.phone===p&&u.id!==eUID)){toast('❌ Phone already exists!','err');return;}
+sLD('Saving...');try{const h=await sha(pw);const d={name:n,phone:p,password:pw,passHash:h,role:r,status:st,area:a,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};if(eUID){await db.collection('users').doc(eUID).update(d);toast('✅ Updated!','ok');}else{d.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection('users').add(d);toast('✅ Created!','ok');}cUM();await lUsr();rUsers();rDash();}catch(e){toast('❌ '+e.message,'err');}hLD();}
+
+async function delU(id){const u=USR.find(x=>x.id===id);if(u&&u.id===ADM?.id){toast('⚠️ Cannot delete yourself!','err');return;}if(!confirm('Delete "'+(u?.name)+'"?'))return;sLD('Deleting...');try{await db.collection('users').doc(id).delete();USR=USR.filter(x=>x.id!==id);rUsers();rDash();toast('🗑️ Deleted!','ok');}catch(e){toast('❌ '+e.message,'err');}hLD();}
+
+function rFlds(){document.getElementById('fList').innerHTML=FLD.map((f,i)=>'<div class="fi"><input value="'+f.icon+'" style="width:38px;text-align:center;" onchange="FLD['+i+'].icon=this.value"><input value="'+f.name+'" style="flex:1;min-width:100px;" onchange="FLD['+i+'].name=this.value"><select onchange="FLD['+i+'].type=this.value;rFlds();"><option value="text" '+(f.type==='text'?'selected':'')+'>Text</option><option value="number" '+(f.type==='number'?'selected':'')+'>Number</option><option value="tel" '+(f.type==='tel'?'selected':'')+'>Phone</option><option value="select" '+(f.type==='select'?'selected':'')+'>Dropdown</option><option value="textarea" '+(f.type==='textarea'?'selected':'')+'>Long Text</option></select><label style="font-size:.62rem;display:flex;align-items:center;gap:3px;"><input type="checkbox" '+(f.required?'checked':'')+' onchange="FLD['+i+'].required=this.checked"> Req</label>'+(f.type==='select'?'<input value="'+((f.options||[]).join(','))+'" placeholder="opt1,opt2,opt3" style="flex:1;min-width:100px;" onchange="FLD['+i+'].options=this.value.split(\',\').map(s=>s.trim())">':'')+'<button class="frm" onclick="rmFld('+i+')">✕</button></div>').join('');}
+function addFld(){FLD.push({name:'New Field',type:'text',icon:'📌',required:false});rFlds();}
+function rmFld(i){if(FLD.length<=1){toast('⚠️ Need at least 1 field!','err');return;}FLD.splice(i,1);rFlds();}
+async function saveFlds(){sLD('Saving...');try{await db.collection(FCOL).doc('fields').set({fields:FLD,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});toast('✅ Fields saved!','ok');}catch(e){toast('❌ '+e.message,'err');}hLD();}
+function resetFlds(){if(!confirm('Reset to default fields?'))return;FLD=JSON.parse(JSON.stringify(DF));rFlds();toast('🔄 Reset done. Click Save to apply.','ok');}
+
+function prvC(){const r=document.documentElement.style;r.setProperty('--p',document.getElementById('cP').value);r.setProperty('--a',document.getElementById('cA').value);r.setProperty('--bg',document.getElementById('cB').value);r.setProperty('--c',document.getElementById('cC').value);r.setProperty('--t',document.getElementById('cT').value);}
+function prvF(){document.body.style.fontFamily=document.getElementById('cFn').value;}
+async function saveCust(){const d={primary:document.getElementById('cP').value,accent:document.getElementById('cA').value,bg:document.getElementById('cB').value,card:document.getElementById('cC').value,text:document.getElementById('cT').value,font:document.getElementById('cFn').value,title:document.getElementById('cTt').value,subtitle:document.getElementById('cSb').value};
+sLD('Saving...');try{await db.collection(FCOL).doc('customize').set(d);localStorage.setItem('wasaCust2',JSON.stringify(d));toast('✅ Saved!','ok');applyCust(d);}catch(e){toast('❌ '+e.message,'err');}hLD();}
+async function loadCust(){try{let d=null;const l=localStorage.getItem('wasaCust2');if(l)d=JSON.parse(l);else{const doc=await db.collection(FCOL).doc('customize').get();if(doc.exists)d=doc.data();}if(d)applyCust(d);}catch(e){}}
+function applyCust(d){const r=document.documentElement.style;if(d.primary){r.setProperty('--p',d.primary);document.getElementById('cP').value=d.primary;}if(d.accent){r.setProperty('--a',d.accent);document.getElementById('cA').value=d.accent;}if(d.bg){r.setProperty('--bg',d.bg);document.getElementById('cB').value=d.bg;}if(d.card){r.setProperty('--c',d.card);document.getElementById('cC').value=d.card;}if(d.text){r.setProperty('--t',d.text);document.getElementById('cT').value=d.text;}if(d.font){document.body.style.fontFamily=d.font;document.getElementById('cFn').value=d.font;}if(d.title){document.querySelector('.sb-tt').textContent=d.title;document.getElementById('cTt').value=d.title;}if(d.subtitle){document.querySelector('.sb-su').textContent=d.subtitle;document.getElementById('cSb').value=d.subtitle;}}
+function rstCust(){if(!confirm('Reset?'))return;localStorage.removeItem('wasaCust2');db.collection(FCOL).doc('customize').delete().catch(()=>{});toast('🔄 Reset!','ok');location.reload();}
+
+async function chAdmPw(){const o=document.getElementById('apO').value.trim(),n=document.getElementById('apN').value.trim();if(!o||!n){toast('⚠️ Fill both!','err');return;}const h=await sha(o);if(h!==ADM.passHash&&o!==ADM.password){toast('❌ Wrong current!','err');return;}sLD('Changing...');try{const nh=await sha(n);await db.collection('users').doc(ADM.id).update({password:n,passHash:nh});ADM.password=n;ADM.passHash=nh;localStorage.setItem('wasaA2',JSON.stringify(ADM));toast('✅ Changed!','ok');document.getElementById('apO').value='';document.getElementById('apN').value='';}catch(e){toast('❌ '+e.message,'err');}hLD();}
+async function chOffPw(){const uid=document.getElementById('opS').value,n=document.getElementById('opN').value.trim();if(!uid||!n){toast('⚠️ Select & enter!','err');return;}sLD('Changing...');try{const h=await sha(n);await db.collection('users').doc(uid).update({password:n,passHash:h});toast('✅ Officer password changed!','ok');document.getElementById('opN').value='';}catch(e){toast('❌ '+e.message,'err');}hLD();}
+
+function getEx(){const of=document.getElementById('exO').value,df=document.getElementById('exF').value,dt=document.getElementById('exT').value,st=document.getElementById('exSt').value;let d=[...SUR];if(of)d=d.filter(s=>s.officerId===of);if(df)d=d.filter(s=>s.timestamp&&s.timestamp>=df);if(dt)d=d.filter(s=>s.timestamp&&s.timestamp<=dt+'T23:59:59');if(st)d=d.filter(s=>(s.readStatus||'unread')===st);return d;}
+
+function exPDF(){const d=getEx();if(!d.length){toast('⚠️ No data!','err');return;}const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape'});
+doc.setFillColor(27,94,32);doc.rect(0,0,300,30,'F');doc.setTextColor(255,255,255);doc.setFontSize(15);doc.setFont('helvetica','bold');doc.text('Missing Details Survey Report',doc.internal.pageSize.width/2,13,{align:'center'});doc.setFontSize(8);doc.text('Generated: '+new Date().toLocaleString(),doc.internal.pageSize.width/2,23,{align:'center'});
+const fl=FLD.map(f=>f.name);const hd=['#','Status',...fl,'Officer','Date','GPS'];const rows=d.map((s,i)=>[i+1,(s.readStatus||'unread').toUpperCase(),...fl.map(f=>gVal(s,f)),gVal(s,'officerName'),s.date||'-',s.gps||'-']);
+doc.autoTable({startY:36,head:[hd],body:rows,headStyles:{fillColor:[27,94,32],textColor:[255,255,255],fontStyle:'bold',fontSize:6,halign:'center'},bodyStyles:{fontSize:6,halign:'center'},alternateRowStyles:{fillColor:[241,248,233]},margin:{left:4,right:4},styles:{cellPadding:2,overflow:'linebreak'}});
+doc.save('MissingDetails_Report_'+new Date().toISOString().slice(0,10)+'.pdf');toast('📄 PDF exported!','ok');}
+
+function exCSV(){const d=getEx();if(!d.length){toast('⚠️ No data!','err');return;}const fl=FLD.map(f=>f.name);const h=['Status',...fl,'Officer','Phone','Date','GPS','Read By'].map(x=>'"'+x+'"').join(',');const rows=d.map(s=>['"'+(s.readStatus||'unread')+'"',...fl.map(f=>'"'+gVal(s,f)+'"'),'"'+gVal(s,'officerName')+'"','"'+gVal(s,'officerPhone')+'"','"'+(s.date||'')+'"','"'+(s.gps||'')+'"','"'+(s.readBy||'')+'"'].join(','));const csv='\uFEFF'+[h,...rows].join('\n');const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='MissingDetails_'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('📊 CSV exported!','ok');}
+
+function exWord(){const d=getEx();if(!d.length){toast('⚠️ No data!','err');return;}const fl=FLD.map(f=>f.name);
+let h='<html><head><meta charset="utf-8"><style>body{font-family:Arial;padding:15px;}h1{color:#1B5E20;text-align:center;}table{width:100%;border-collapse:collapse;margin-top:15px;}th{background:#1B5E20;color:white;padding:6px;font-size:9px;}td{border:1px solid #ddd;padding:5px;font-size:9px;}tr:nth-child(even){background:#f9f9f9;}.unread{background:#FFF3C4 !important;}.read{background:#D1FAE5 !important;}</style></head><body>';
+h+='<h1>Missing Details Survey Report</h1><p>Total: '+d.length+' | Date: '+new Date().toLocaleDateString('en-GB')+'</p>';
+h+='<table><tr><th>#</th><th>Status</th>'+fl.map(f=>'<th>'+f+'</th>').join('')+'<th>Officer</th><th>Date</th><th>GPS</th></tr>';
+d.forEach((s,i)=>{const rs=(s.readStatus||'unread');h+='<tr class="'+rs+'"><td>'+(i+1)+'</td><td>'+rs.toUpperCase()+'</td>'+fl.map(f=>'<td>'+gVal(s,f)+'</td>').join('')+'<td>'+gVal(s,'officerName')+'</td><td>'+(s.date||'-')+'</td><td>'+(s.gps||'-')+'</td></tr>';});
+h+='</table></body></html>';const b=new Blob([h],{type:'application/msword'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='MissingDetails_'+new Date().toISOString().slice(0,10)+'.doc';a.click();toast('📝 Word exported!','ok');}
+
+async function doBk(){sLD('Creating backup...');try{const d={surveys:SUR,users:USR,fields:FLD,collection:COL,timestamp:new Date().toISOString()};const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='MissingDetails_Backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();toast('📥 Backup downloaded!','ok');}catch(e){toast('❌ '+e.message,'err');}hLD();}
+async function doRst(){const f=document.getElementById('rF').files[0];if(!f){toast('⚠️ Select file!','err');return;}if(!confirm('⚠️ Restore will ADD data from backup. Continue?'))return;sLD('Restoring...');try{const t=await f.text();const d=JSON.parse(t);if(d.surveys){for(let s of d.surveys){delete s.id;await db.collection(COL).add(s);}}toast('✅ Restored! Reloading...','ok');setTimeout(()=>loadAll(),1000);}catch(e){toast('❌ Invalid: '+e.message,'err');}hLD();}
+
+function go(p,el){document.querySelectorAll('.pg').forEach(x=>x.classList.remove('act'));document.querySelectorAll('.sb-lk').forEach(x=>x.classList.remove('act'));const pg=document.getElementById('p-'+p);if(pg)pg.classList.add('act');if(el)el.classList.add('act');
+const titles={dashboard:'📊 Dashboard',surveys:'📋 All Surveys',users:'👥 Users',fields:'📝 Form Fields',customize:'🎨 Customize',settings:'⚙️ Settings',export:'📤 Export',backup:'💾 Backup'};document.getElementById('pgTitle').textContent=titles[p]||p;
+if(p==='dashboard')rDash();if(p==='surveys')rSurv();if(p==='users')rUsers();if(p==='fields')rFlds();if(p==='export')uFilt();if(p==='settings')uFilt();
+closeSB();}
+function tSB(){document.getElementById('sb').classList.toggle('open');document.getElementById('sov').classList.toggle('open');}
+function closeSB(){document.getElementById('sb').classList.remove('open');document.getElementById('sov').classList.remove('open');}
+
+function oV(u,t){const c=document.getElementById('vwC');c.innerHTML=t==='image'?'<img src="'+u+'">':'<video src="'+u+'" controls autoplay style="max-width:90%;max-height:85vh;border-radius:8px;"></video>';document.getElementById('vw').classList.add('open');}
+function cV(){document.getElementById('vw').classList.remove('open');}
+
+function toast(m,t=''){const e=document.getElementById('tst');e.textContent=m;e.className='toast show '+t;setTimeout(()=>e.className='toast',3000);}
+function sLD(m){document.getElementById('ldM').textContent=m;document.getElementById('ld').classList.add('show');}
+function hLD(){document.getElementById('ld').classList.remove('show');}
+
+setInterval(async()=>{if(ADM){try{await lSurv();const p=document.querySelector('.pg.act');if(p?.id==='p-dashboard')rDash();if(p?.id==='p-surveys')rSurv();updateUnreadBadge();}catch(e){}}},30000);
+</script>
+</body>
+</html>
