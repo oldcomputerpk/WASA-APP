@@ -1,0 +1,2599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#003366">
+    <title>WASA Bills Admin Panel</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root{
+            --p:#003366;--pd:#001F3F;--pl:#E6F0FA;
+            --a:#FF6B35;--al:#FFF3ED;
+            --s:#10B981;--sl:#D1FAE5;
+            --w:#F59E0B;--wl:#FEF3C7;
+            --r:#EF4444;--rl:#FEE2E2;
+            --bg:#F5F7FA;--c:#FFF;
+            --t:#1A1A2E;--td:#6B7280;--tl:#9CA3AF;--b:#E5E7EB;
+            --sh:0 2px 8px rgba(0,0,0,0.06);
+            --shx:0 4px 15px rgba(0,0,0,0.1);
+            --br:12px;
+            --sw:260px;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,sans-serif;}
+        body{background:var(--bg);color:var(--t);min-height:100vh;}
+
+        /* ─── LOGIN ─── */
+        .login-w{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--p),var(--pd));padding:20px;}
+        .login-b{background:#fff;border-radius:20px;padding:35px 28px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.2);}
+        .login-ic{width:75px;height:75px;background:var(--pl);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:2rem;font-weight:900;color:var(--p);}
+        .login-b h2{text-align:center;font-size:1.3rem;margin-bottom:3px;}
+        .login-b .sub{text-align:center;color:var(--td);font-size:0.85rem;margin-bottom:20px;}
+        .lin{width:100%;padding:12px 15px;border:2px solid var(--b);border-radius:12px;font-size:0.95rem;outline:none;margin-bottom:10px;background:var(--bg);transition:0.2s;}
+        .lin:focus{border-color:var(--p);background:#fff;box-shadow:0 0 0 3px rgba(0,51,102,0.1);}
+        .lbtn{width:100%;padding:13px;background:var(--p);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:5px;transition:0.2s;}
+        .lbtn:hover{background:var(--pd);}
+        .lerr{color:var(--r);font-size:0.8rem;text-align:center;margin-top:8px;display:none;padding:8px;background:var(--rl);border-radius:8px;}
+        .login-note{text-align:center;color:var(--td);font-size:0.72rem;margin-top:15px;padding:10px;background:var(--bg);border-radius:8px;}
+
+        /* ─── LAYOUT ─── */
+        .layout{display:flex;min-height:100vh;}
+        .sidebar{width:var(--sw);background:#fff;border-right:1px solid var(--b);position:fixed;top:0;bottom:0;overflow-y:auto;z-index:50;box-shadow:2px 0 10px rgba(0,0,0,0.04);transition:transform 0.3s;}
+
+        .sb-header{padding:18px 20px;border-bottom:1px solid var(--b);background:linear-gradient(135deg,var(--p),var(--pd));color:#fff;}
+        .sb-logo{display:flex;align-items:center;gap:10px;}
+        .sb-logo-box{width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;font-size:1.2rem;}
+        .sb-title{font-size:0.95rem;font-weight:700;color:#fff;}
+        .sb-sub{font-size:0.6rem;color:rgba(255,255,255,0.75);}
+
+        .sb-section{font-size:0.58rem;color:var(--tl);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;padding:12px 20px 5px;}
+        .sb-link{display:flex;align-items:center;gap:11px;padding:10px 20px;cursor:pointer;font-size:0.85rem;color:var(--td);font-weight:500;border:none;background:none;width:100%;text-align:left;transition:0.15s;position:relative;}
+        .sb-link:hover{background:var(--pl);color:var(--p);}
+        .sb-link.act{background:var(--pl);color:var(--p);font-weight:700;}
+        .sb-link.act::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--p);}
+        .sb-link .ic{font-size:1.05rem;width:22px;text-align:center;}
+        .sb-link .badge{margin-left:auto;background:var(--r);color:#fff;font-size:0.55rem;padding:2px 7px;border-radius:10px;font-weight:700;min-width:20px;text-align:center;}
+        .sb-divider{height:1px;background:var(--b);margin:6px 20px;}
+        .sb-link.red{color:var(--r);}
+        .sb-link.red:hover{background:var(--rl);}
+
+        /* ─── MAIN ─── */
+        .main{flex:1;margin-left:var(--sw);padding:22px;min-height:100vh;}
+        .mtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+        .mtop h1{font-size:1.35rem;display:flex;align-items:center;gap:8px;color:var(--p);}
+        .mtop .subtitle{color:var(--td);font-size:0.75rem;margin-top:2px;}
+
+        /* ─── CARDS ─── */
+        .card{background:#fff;border:1px solid var(--b);border-radius:var(--br);padding:18px;margin-bottom:15px;box-shadow:var(--sh);}
+        .ct{font-size:0.95rem;color:var(--p);margin-bottom:14px;display:flex;align-items:center;gap:7px;font-weight:700;}
+        .ct .icon{font-size:1.1rem;}
+
+        /* ─── STATS ─── */
+        .sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;}
+        .stc{background:#fff;border:1px solid var(--b);border-radius:var(--br);padding:16px;box-shadow:var(--sh);display:flex;align-items:center;gap:12px;transition:0.2s;cursor:pointer;}
+        .stc:hover{transform:translateY(-2px);box-shadow:var(--shx);}
+        .sti{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
+        .stn{font-size:1.5rem;font-weight:800;line-height:1;}
+        .stl{font-size:0.62rem;color:var(--td);text-transform:uppercase;letter-spacing:0.5px;margin-top:3px;font-weight:600;}
+
+        .c-p{color:var(--p);}
+        .c-s{color:var(--s);}
+        .c-a{color:var(--a);}
+        .c-w{color:var(--w);}
+        .c-r{color:var(--r);}
+
+        /* ─── BUTTONS ─── */
+        .btn{padding:9px 16px;border:none;border-radius:9px;font-size:0.8rem;font-weight:600;cursor:pointer;transition:0.15s;display:inline-flex;align-items:center;gap:5px;}
+        .btn:hover{transform:translateY(-1px);box-shadow:var(--sh);}
+        .btn-p{background:var(--p);color:#fff;}
+        .btn-p:hover{background:var(--pd);}
+        .btn-s{background:var(--s);color:#fff;}
+        .btn-a{background:var(--a);color:#fff;}
+        .btn-r{background:var(--r);color:#fff;}
+        .btn-w{background:var(--w);color:#fff;}
+        .btn-o{background:transparent;color:var(--p);border:2px solid var(--p);}
+        .btn-sm{padding:5px 10px;font-size:0.7rem;border-radius:6px;}
+
+        /* ─── TABLES ─── */
+        .tw{overflow-x:auto;border-radius:10px;border:1px solid var(--b);background:#fff;}
+        table{width:100%;border-collapse:collapse;min-width:500px;}
+        thead{background:var(--pl);}
+        th{padding:10px 12px;text-align:left;font-size:0.65rem;color:var(--p);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;white-space:nowrap;}
+        td{padding:10px 12px;font-size:0.8rem;border-bottom:1px solid var(--b);}
+        tbody tr:hover{background:var(--bg);}
+        tbody tr.highlight{background:var(--wl);}
+        tbody tr.completed{background:var(--sl);}
+        tbody tr.active-row{background:var(--pl);border-left:3px solid var(--p);}
+
+        .bd{padding:3px 8px;border-radius:12px;font-size:0.58rem;font-weight:700;text-transform:uppercase;display:inline-block;}
+        .bd-ok{background:var(--sl);color:var(--s);}
+        .bd-no{background:var(--rl);color:var(--r);}
+        .bd-w{background:var(--wl);color:var(--w);}
+        .bd-p{background:var(--pl);color:var(--p);}
+        .bd-a{background:var(--al);color:var(--a);}
+
+        /* ─── FORM ─── */
+        .fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+        .fg label{font-size:0.65rem;color:var(--td);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;}
+        .fg input,.fg select,.fg textarea{padding:10px 12px;border:2px solid var(--b);border-radius:8px;font-size:0.85rem;outline:none;background:var(--bg);transition:0.2s;}
+        .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--p);background:#fff;}
+        .fg textarea{min-height:70px;resize:vertical;}
+        .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+
+        /* ─── SEARCH ─── */
+        .srow{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;}
+        .si{flex:1;min-width:180px;padding:9px 12px;border:2px solid var(--b);border-radius:8px;font-size:0.82rem;outline:none;background:#fff;}
+        .si:focus{border-color:var(--p);}
+
+        /* ─── MODAL ─── */
+        .modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:center;justify-content:center;padding:15px;backdrop-filter:blur(3px);}
+        .modal.open{display:flex;}
+        .mbox{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:540px;max-height:88vh;overflow-y:auto;animation:fadeIn 0.2s;}
+        .mbox h3{font-size:1.1rem;color:var(--p);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+
+        /* ─── DETAIL PANEL ─── */
+        .dov{position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:149;display:none;}
+        .dov.open{display:block;}
+        .dp{position:fixed;top:0;right:-460px;width:440px;max-width:100%;height:100vh;background:#fff;box-shadow:-4px 0 20px rgba(0,0,0,0.1);z-index:150;overflow-y:auto;transition:right 0.3s;padding:22px;}
+        .dp.open{right:0;}
+        .drow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--b);gap:10px;}
+        .dl{font-size:0.7rem;color:var(--td);font-weight:600;flex-shrink:0;}
+        .dv{font-size:0.8rem;font-weight:600;text-align:right;word-break:break-word;}
+
+        /* ─── MEDIA GRID ─── */
+        .mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:10px;}
+        .mi{aspect-ratio:1;border-radius:9px;overflow:hidden;border:1px solid var(--b);cursor:pointer;}
+        .mi img,.mi video{width:100%;height:100%;object-fit:cover;}
+
+        /* ─── VIEWER ─── */
+        .vw{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:300;display:none;align-items:center;justify-content:center;}
+        .vw.open{display:flex;}
+        .vw img,.vw video{max-width:90%;max-height:85vh;border-radius:8px;}
+        .vx{position:absolute;top:12px;right:15px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+        /* ─── SETUP ITEMS ─── */
+        .setup-item{display:flex;align-items:center;gap:8px;padding:12px;background:var(--bg);border-radius:10px;margin-bottom:8px;border:1px solid var(--b);}
+        .setup-item.active-seq{background:var(--pl);border-color:var(--p);}
+        .setup-item.completed-seq{background:var(--sl);border-color:var(--s);}
+        .setup-day{background:var(--p);color:#fff;width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;flex-shrink:0;}
+        .setup-info{flex:1;min-width:0;}
+        .setup-name{font-weight:700;font-size:0.9rem;}
+        .setup-meta{font-size:0.68rem;color:var(--td);margin-top:2px;}
+        .setup-actions{display:flex;gap:4px;flex-wrap:wrap;}
+
+        /* ─── CUSTOMIZE ─── */
+        .cs{border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:14px;background:#fff;}
+        .cs h4{font-size:0.78rem;color:var(--p);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid var(--pl);padding-bottom:6px;}
+        .crow{display:flex;align-items:center;justify-content:space-between;padding:6px 0;}
+        .crow label{font-size:0.78rem;color:var(--td);}
+        .crow input[type="color"]{width:42px;height:32px;border:2px solid var(--b);border-radius:6px;cursor:pointer;background:none;padding:1px;}
+        .cgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+        /* ─── PAGES ─── */
+        .pg{display:none;animation:fadeIn 0.2s;}
+        .pg.act{display:block;}
+
+        /* ─── TOAST ─── */
+        .toast{position:fixed;top:18px;right:18px;background:var(--t);color:#fff;padding:12px 20px;border-radius:10px;font-size:0.8rem;font-weight:600;opacity:0;transition:0.3s;z-index:9999;box-shadow:0 5px 20px rgba(0,0,0,0.15);}
+        .toast.show{opacity:1;}
+        .toast.err{background:var(--r);}
+        .toast.ok{background:var(--s);}
+        .toast.warn{background:var(--w);}
+
+        /* ─── LOADING ─── */
+        .ld{position:fixed;inset:0;background:rgba(255,255,255,0.9);z-index:400;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;}
+        .ld.show{display:flex;}
+        .ldsp{width:36px;height:36px;border:3px solid var(--b);border-top-color:var(--p);border-radius:50%;animation:spin 0.7s linear infinite;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+
+        /* ─── HAMBURGER ─── */
+        .ham{display:none;background:none;border:none;font-size:1.4rem;cursor:pointer;padding:5px;color:var(--t);}
+        .sov{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:none;}
+        .sov.open{display:block;}
+
+        /* ─── CHART CONTAINER ─── */
+        .chart-container{position:relative;height:280px;margin:10px 0;}
+        .chart-title{font-size:0.9rem;font-weight:700;color:var(--p);margin-bottom:10px;text-align:center;}
+        .chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:15px;}
+
+        /* ─── FILTER TABS ─── */
+        .ft-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+        .ft-tab{padding:7px 14px;border:2px solid var(--b);border-radius:20px;background:#fff;color:var(--td);font-size:0.72rem;font-weight:700;cursor:pointer;transition:0.15s;display:flex;align-items:center;gap:5px;}
+        .ft-tab.act{background:var(--p);color:#fff;border-color:var(--p);}
+        .ft-tab .cnt{background:rgba(255,255,255,0.3);padding:0 6px;border-radius:8px;font-size:0.65rem;}
+        .ft-tab:not(.act) .cnt{background:var(--pl);color:var(--p);}
+
+        /* ─── PROGRESS BAR ─── */
+        .prog-bar{height:8px;background:var(--b);border-radius:5px;overflow:hidden;margin:5px 0;}
+        .prog-fill{height:100%;background:linear-gradient(90deg,var(--p),var(--a));border-radius:5px;transition:width 0.6s;}
+        .prog-mini{width:100px;height:6px;background:var(--b);border-radius:4px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:5px;}
+        .prog-mini-fill{height:100%;background:linear-gradient(90deg,var(--p),var(--a));border-radius:4px;}
+
+        /* ─── RESPONSIVE ─── */
+        @media(max-width:900px){
+            .sidebar{transform:translateX(-100%);z-index:201;}
+            .sidebar.open{transform:translateX(0);}
+            .main{margin-left:0;}
+            .ham{display:block;}
+            .dp{width:100%;}
+            .chart-grid{grid-template-columns:1fr;}
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div class="login-w" id="loginW">
+    <div class="login-b">
+        <div class="login-ic">💧</div>
+        <h2 id="loginTitle">WASA Bills Admin</h2>
+        <p class="sub" id="loginSub">Distribution Management</p>
+        <input class="lin" type="tel" id="aP" placeholder="📞 Phone Number">
+        <input class="lin" type="password" id="aPw" placeholder="🔒 Password">
+        <button class="lbtn" onclick="adminLogin()">Login →</button>
+        <p class="lerr" id="aE"></p>
+        <p class="login-note">🔐 Default: 03001234567 / admin123</p>
+    </div>
+</div>
+
+<!-- ═══ MAIN LAYOUT ═══ -->
+<div class="layout" id="layout" style="display:none;">
+
+    <div class="sov" id="sov" onclick="toggleSB()"></div>
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <div class="sidebar" id="sb">
+        <div class="sb-header">
+            <div class="sb-logo">
+                <div class="sb-logo-box">💧</div>
+                <div>
+                    <div class="sb-title" id="sbTitle">WASA Bills</div>
+                    <div class="sb-sub" id="sbSub">Admin Panel</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sb-section">Overview</div>
+        <button class="sb-link act" onclick="go('dashboard',this)">
+            <span class="ic">📊</span>Dashboard
+        </button>
+        <button class="sb-link" onclick="go('reports',this)">
+            <span class="ic">📈</span>Reports & Analytics
+        </button>
+
+        <div class="sb-section">Operations</div>
+        <button class="sb-link" onclick="go('dailyentry',this)">
+            <span class="ic">📅</span>Daily Entry View
+        </button>
+        <button class="sb-link" onclick="go('areadetail',this)">
+            <span class="ic">📋</span>Area Detail
+        </button>
+        <button class="sb-link" onclick="go('sequence',this)">
+            <span class="ic">⚙️</span>Sequence Setup
+        </button>
+
+        <div class="sb-section">Management</div>
+        <button class="sb-link" onclick="go('mainareas',this)">
+            <span class="ic">🏘️</span>Main Areas
+        </button>
+        <button class="sb-link" onclick="go('subareas',this)">
+            <span class="ic">🏠</span>Sub Areas
+        </button>
+        <button class="sb-link" onclick="go('users',this)">
+            <span class="ic">👥</span>Users
+        </button>
+
+        <div class="sb-section">System</div>
+        <button class="sb-link" onclick="go('customize',this)">
+            <span class="ic">🎨</span>Customize
+        </button>
+        <button class="sb-link" onclick="go('export',this)">
+            <span class="ic">📤</span>Export Data
+        </button>
+        <button class="sb-link" onclick="go('backup',this)">
+            <span class="ic">💾</span>Backup & Restore
+        </button>
+        <button class="sb-link" onclick="go('settings',this)">
+            <span class="ic">⚙️</span>Settings
+        </button>
+
+        <div class="sb-divider"></div>
+        <button class="sb-link red" onclick="adminLogout()">
+            <span class="ic">🚪</span>Logout
+        </button>
+    </div>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <div class="main">
+        <div class="mtop">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <button class="ham" onclick="toggleSB()">☰</button>
+                <div>
+                    <h1 id="pgTitle">📊 Dashboard</h1>
+                    <div class="subtitle" id="pgSubtitle">Live overview of distribution progress</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ PAGE: DASHBOARD ═══ -->
+        <div class="pg act" id="p-dashboard">
+            <div class="sg" id="statsGrid"></div>
+
+            <div class="chart-grid">
+                <div class="card">
+                    <div class="chart-title">📊 Distribution by Main Area</div>
+                    <div class="chart-container">
+                        <canvas id="chartArea"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="chart-title">🥧 Overall Status</div>
+                    <div class="chart-container">
+                        <canvas id="chartStatus"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="card">
+                    <div class="chart-title">📈 Daily Progress (Last 10 Days)</div>
+                    <div class="chart-container">
+                        <canvas id="chartDaily"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="chart-title">👥 Officer Performance</div>
+                    <div class="chart-container">
+                        <canvas id="chartOfficer"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="ct"><span class="icon">📋</span>Recent Entries</div>
+                <div class="tw">
+                    <table>
+                        <thead id="rHead"></thead>
+                        <tbody id="rBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ PAGE: DAILY ENTRY VIEW ═══ -->
+        <div class="pg" id="p-dailyentry">
+            <div class="card">
+                <div class="ct"><span class="icon">📅</span>All Daily Entries (Live)</div>
+                <div class="srow">
+                    <input class="si" id="deSearch" placeholder="🔍 Search entries..." oninput="renderDailyEntry()">
+                    <select class="si" style="max-width:180px;" id="deFilter" onchange="renderDailyEntry()">
+                        <option value="">All Officers</option>
+                    </select>
+                    <select class="si" style="max-width:150px;" id="deDay" onchange="renderDailyEntry()">
+                        <option value="">All Days</option>
+                    </select>
+                    <input class="si" type="date" style="max-width:160px;" id="deFrom" onchange="renderDailyEntry()">
+                    <input class="si" type="date" style="max-width:160px;" id="deTo" onchange="renderDailyEntry()">
+                </div>
+                <div class="tw">
+                    <table>
+                        <thead id="deHead"></thead>
+                        <tbody id="deBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ PAGE: AREA DETAIL ═══ -->
+        <div class="pg" id="p-areadetail">
+            <div class="card">
+                <div class="ct"><span class="icon">📋</span>Area Detail (Live)</div>
+                <div class="srow">
+                    <input class="si" id="adSearch" placeholder="🔍 Search sub areas..." oninput="renderAreaDetail()">
+                    <select class="si" style="max-width:200px;" id="adArea" onchange="renderAreaDetail()">
+                        <option value="">All Main Areas</option>
+                    </select>
+                    <select class="si" style="max-width:150px;" id="adStatus" onchange="renderAreaDetail()">
+                        <option value="">All Status</option>
+                        <option value="Not Started">Not Started</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                    <select class="si" style="max-width:150px;" id="adRecovery" onchange="renderAreaDetail()">
+                        <option value="">All Recovery</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Recovered">Recovered</option>
+                    </select>
+                </div>
+                <div class="tw">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Day</th><th>Main Area</th><th>Sub Area</th>
+                                <th>Total</th><th>Distributed</th><th>Remaining</th>
+                                <th>%</th><th>Status</th><th>Recovery</th><th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ PAGE: SEQUENCE SETUP ═══ -->
+        <div class="pg" id="p-sequence">
+            <div class="card">
+                <div class="ct"><span class="icon">⚙️</span>10-Day Sequence Setup</div>
+                <p style="color:var(--td);font-size:0.78rem;margin-bottom:12px;">
+                    Manage the order of areas. Complete current area → next becomes active automatically.
+                </p>
+
+                <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+                    <button class="btn btn-p" onclick="openAddArea()">➕ Add Main Area</button>
+                    <button class="btn btn-o" onclick="resetSequence()">🔄 Reset All to Pending</button>
+                    <button class="btn btn-a" onclick="toggleAutoSequence()">
+                        <span id="autoSeqLabel">🤖 Auto-Sequence: ON</span>
+                    </button>
+                </div>
+
+                <div id="sequenceList"></div>
+            </div>
+        </div>
+
+        <!-- ═══ PAGE: MAIN AREAS ═══ -->
+        <div class="pg" id="p-mainareas">
+            <div class="card">
+                <div class="ct"><span class="icon">🏘️</span>Main Areas Management</div>
+                <div class="srow">
+                    <input class="si" id="maSearch" placeholder="🔍 Search areas..." oninput="renderMainAreas()">
+                    <button class="btn btn-p" onclick="openAddArea()">➕ Add Main Area</button>
+                </div>
+                <div class="tw">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Day</th><th>Name</th><th>Sub Areas</th>
+                                <th>Total Bills</th><th>Distributed</th><th>%</th>
+                                <th>Status</th><th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="maBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ PAGE: SUB AREAS ═══ -->
+        <div class="pg" id="p-subareas">
+            <div class="card">
+                <div class="ct"><span class="icon">🏠</span>Sub Areas Management</div>
+                <div class="srow">
+                    <input class="si" id="saSearch" placeholder="🔍 Search sub areas..." oninput="renderSubAreas()">
+                    <select class="si" style="max-width:200px;" id="saFilter" onchange="renderSubAreas()">
+                        <option value="">All Main Areas</option>
+                    </select>
+                    <button class="btn btn-p" onclick="openAddSub()">➕ Add Sub Area</button>
+                    <button class="btn btn-a" onclick="openBulkAdd()">📥 Bulk Import</button>
+                </div>
+                <div class="tw">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Main Area</th><th>Sub Area</th>
+                                <th>Total Bills</th><th>Distributed</th><th>%</th>
+                                <th>Status</th><th>Recovery</th><th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="saBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ PAGE: USERS ═══ -->
+        <div class="pg" id="p-users">
+            <div class="card">
+                <div class="ct"><span class="icon">👥</span>Users Management</div>
+                <div class="srow">
+                    <input class="si" id="uSearch" placeholder="🔍 Search users..." oninput="renderUsers()">
+                    <button class="btn btn-p" onclick="openAddUser()">➕ Add User</button>
+                </div>
+                <div class="tw">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Name</th><th>Phone</th><th>Role</th>
+                                <th>Status</th><th>Area</th><th>Entries</th><th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="uBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ PAGE: REPORTS ═══ -->
+        <div class="pg" id="p-reports">
+            <div class="chart-grid">
+                <div class="card">
+                    <div class="chart-title">📊 Completion Rate</div>
+                    <div class="chart-container">
+                        <canvas id="rptCompletion"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="chart-title">💰 Recovery Status</div>
+                    <div class="chart-container">
+                        <canvas id="rptRecovery"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-grid">
+                <div class="card">
+                    <div class="chart-title">📈 Distribution Trend</div>
+                    <div class="chart-container">
+                        <canvas id="rptTrend"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="chart-title">🏘️ Area Performance</div>
+                    <div class="chart-container">
+                        <canvas id="rptArea"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ PAGE: CUSTOMIZE ═══ -->
+        <div class="pg" id="p-customize">
+            <div class="card">
+                <div class="ct"><span class="icon">🎨</span>App Customization</div>
+                <p style="color:var(--td);font-size:0.78rem;margin-bottom:14px;">
+                    Har cheez customize karo - colors, fonts, text, sab kuch!
+                </p>
+
+                <div class="cs">
+                    <h4>🎨 Color Scheme</h4>
+                    <div class="cgrid">
+                        <div class="crow"><label>Primary Color</label><input type="color" id="cP" value="#003366" onchange="prvColor()"></div>
+                        <div class="crow"><label>Primary Dark</label><input type="color" id="cPd" value="#001F3F" onchange="prvColor()"></div>
+                        <div class="crow"><label>Primary Light</label><input type="color" id="cPl" value="#E6F0FA" onchange="prvColor()"></div>
+                        <div class="crow"><label>Accent Color</label><input type="color" id="cA" value="#FF6B35" onchange="prvColor()"></div>
+                        <div class="crow"><label>Background</label><input type="color" id="cB" value="#F5F7FA" onchange="prvColor()"></div>
+                        <div class="crow"><label>Card BG</label><input type="color" id="cC" value="#FFFFFF" onchange="prvColor()"></div>
+                        <div class="crow"><label>Text Color</label><input type="color" id="cT" value="#1A1A2E" onchange="prvColor()"></div>
+                        <div class="crow"><label>Success Color</label><input type="color" id="cS" value="#10B981" onchange="prvColor()"></div>
+                        <div class="crow"><label>Warning Color</label><input type="color" id="cW" value="#F59E0B" onchange="prvColor()"></div>
+                        <div class="crow"><label>Danger Color</label><input type="color" id="cR" value="#EF4444" onchange="prvColor()"></div>
+                    </div>
+                </div>
+
+                <div class="cs">
+                    <h4>🔤 Typography</h4>
+                    <div class="fg">
+                        <label>Font Family</label>
+                        <select id="cFont" onchange="prvFont()">
+                            <option value="'Segoe UI',Roboto,sans-serif">Segoe UI (Default)</option>
+                            <option value="Arial,sans-serif">Arial</option>
+                            <option value="Georgia,serif">Georgia</option>
+                            <option value="Verdana,sans-serif">Verdana</option>
+                            <option value="Tahoma,sans-serif">Tahoma</option>
+                            <option value="'Times New Roman',serif">Times New Roman</option>
+                            <option value="'Courier New',monospace">Courier New</option>
+                            <option value="'Trebuchet MS',sans-serif">Trebuchet MS</option>
+                        </select>
+                    </div>
+                    <div class="fg">
+                        <label>Border Radius Style</label>
+                        <select id="cRadius" onchange="prvRadius()">
+                            <option value="6px">Sharp (6px)</option>
+                            <option value="10px">Medium (10px)</option>
+                            <option value="12px" selected>Rounded (12px)</option>
+                            <option value="18px">Very Rounded (18px)</option>
+                            <option value="24px">Pill (24px)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="cs">
+                    <h4>🏷️ App Branding</h4>
+                    <div class="fg">
+                        <label>Officer App Title</label>
+                        <input type="text" id="cAppTitle" value="WASA Bills Tracker" placeholder="App title">
+                    </div>
+                    <div class="fg">
+                        <label>Officer App Subtitle</label>
+                        <input type="text" id="cAppSub" value="Distribution System" placeholder="Subtitle">
+                    </div>
+                    <div class="fg">
+                        <label>Admin Panel Title</label>
+                        <input type="text" id="cAdminTitle" value="WASA Bills" placeholder="Admin title">
+                    </div>
+                    <div class="fg">
+                        <label>Admin Panel Subtitle</label>
+                        <input type="text" id="cAdminSub" value="Admin Panel" placeholder="Admin subtitle">
+                    </div>
+                    <div class="fg">
+                        <label>Login Page Title</label>
+                        <input type="text" id="cLoginTitle" value="WASA Bills Admin" placeholder="Login title">
+                    </div>
+                </div>
+
+                <div class="cs">
+                    <h4>📊 Dashboard Text</h4>
+                    <div class="fg">
+                        <label>Card 1 Label</label>
+                        <input type="text" id="cLbl1" value="Total Main Areas" placeholder="Total Areas">
+                    </div>
+                    <div class="fg">
+                        <label>Card 2 Label</label>
+                        <input type="text" id="cLbl2" value="Completed" placeholder="Completed">
+                    </div>
+                    <div class="fg">
+                        <label>Card 3 Label</label>
+                        <input type="text" id="cLbl3" value="Active Day" placeholder="Active Day">
+                    </div>
+                    <div class="fg">
+                        <label>Card 4 Label</label>
+                        <input type="text" id="cLbl4" value="Overall %" placeholder="Overall %">
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:8px;margin-top:15px;flex-wrap:wrap;">
+                    <button class="btn btn-p" onclick="saveCustomization()">💾 Save Customization</button>
+                    <button class="btn btn-o" onclick="resetCustomization()">🔄 Reset to Default</button>
+                    <button class="btn btn-a" onclick="applyTheme('blue')">🔵 Blue Theme</button>
+                    <button class="btn btn-s" onclick="applyTheme('green')">🟢 Green Theme</button>
+                    <button class="btn btn-r" onclick="applyTheme('red')">🔴 Red Theme</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ PAGE: EXPORT ═══ -->
+        <div class="pg" id="p-export">
+            <div class="card">
+                <div class="ct"><span class="icon">📤</span>Export Data</div>
+                <div class="fgrid" style="margin-bottom:14px;">
+                    <div class="fg">
+                        <label>Officer Filter</label>
+                        <select id="exO"><option value="">All Officers</option></select>
+                    </div>
+                    <div class="fg">
+                        <label>Main Area Filter</label>
+                        <select id="exA"><option value="">All Areas</option></select>
+                    </div>
+                    <div class="fg">
+                        <label>From Date</label>
+                        <input type="date" id="exF">
+                    </div>
+                    <div class="fg">
+                        <label>To Date</label>
+                        <input type="date" id="exT">
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-r" onclick="exportPDF()">📄 Export PDF</button>
+                    <button class="btn btn-s" onclick="exportCSV()">📊 Export CSV/Excel</button>
+                    <button class="btn btn-p" onclick="exportWord()">📝 Export Word</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="ct"><span class="icon">📊</span>Quick Reports</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-o" onclick="quickReport('daily')">📅 Today's Report</button>
+                    <button class="btn btn-o" onclick="quickReport('area')">🏘️ Area-wise Report</button>
+                    <button class="btn btn-o" onclick="quickReport('officer')">👥 Officer Report</button>
+                    <button class="btn btn-o" onclick="quickReport('recovery')">💰 Recovery Report</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ PAGE: BACKUP ═══ -->
+        <div class="pg" id="p-backup">
+            <div class="card">
+                <div class="ct"><span class="icon">💾</span>Backup & Restore</div>
+                <p style="color:var(--td);font-size:0.78rem;margin-bottom:14px;">
+                    Complete data backup (Main Areas, Sub Areas, Entries, Users, Settings)
+                </p>
+                <button class="btn btn-p" onclick="doBackup()" style="margin-bottom:12px;">
+                    📥 Download Complete Backup (JSON)
+                </button>
+                <div class="fg">
+                    <label>📤 Restore from Backup File</label>
+                    <input type="file" accept=".json" id="rFile" style="padding:8px;">
+                </div>
+                <button class="btn btn-w" style="margin-top:8px;" onclick="doRestore()">
+                    📤 Restore Data
+                </button>
+                <p style="color:var(--r);font-size:0.7rem;margin-top:10px;">
+                    ⚠️ Warning: Restore will ADD data. Backup existing data first!
+                </p>
+            </div>
+        </div>
+
+        <!-- ═══ PAGE: SETTINGS ═══ -->
+        <div class="pg" id="p-settings">
+            <div class="card">
+                <div class="ct"><span class="icon">🔐</span>Change Admin Password</div>
+                <div class="fgrid">
+                    <div class="fg"><label>Current Password</label><input type="password" id="apO"></div>
+                    <div class="fg"><label>New Password</label><input type="password" id="apN"></div>
+                </div>
+                <button class="btn btn-p" style="margin-top:8px;" onclick="changeAdminPass()">💾 Change Password</button>
+            </div>
+
+            <div class="card">
+                <div class="ct"><span class="icon">🔑</span>Change Officer Password</div>
+                <div class="fgrid">
+                    <div class="fg"><label>Select Officer</label><select id="opS"><option value="">Select...</option></select></div>
+                    <div class="fg"><label>New Password</label><input type="password" id="opN"></div>
+                </div>
+                <button class="btn btn-p" style="margin-top:8px;" onclick="changeOfficerPass()">💾 Change Officer Password</button>
+            </div>
+
+            <div class="card">
+                <div class="ct"><span class="icon">⚙️</span>System Settings</div>
+                <div class="fg">
+                    <label>Auto-Sequence (When all sub-areas 100%)</label>
+                    <select id="autoSeq">
+                        <option value="true">ON - Auto move to next day</option>
+                        <option value="false">OFF - Manual control only</option>
+                    </select>
+                </div>
+                <div class="fg">
+                    <label>Session Timeout (minutes)</label>
+                    <input type="number" id="sessTime" value="30" min="5" max="120">
+                </div>
+                <button class="btn btn-p" style="margin-top:8px;" onclick="saveSystemSettings()">💾 Save Settings</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ USER MODAL ═══ -->
+<div class="modal" id="uM">
+    <div class="mbox">
+        <h3 id="uMT">➕ Add User</h3>
+        <div class="fgrid">
+            <div class="fg"><label>Name *</label><input type="text" id="umN"></div>
+            <div class="fg"><label>Phone *</label><input type="tel" id="umP" maxlength="11"></div>
+            <div class="fg"><label>Password *</label><input type="text" id="umPw"></div>
+            <div class="fg"><label>Role *</label>
+                <select id="umR"><option value="officer">Officer</option><option value="admin">Admin</option></select>
+            </div>
+            <div class="fg"><label>Status</label>
+                <select id="umS"><option value="active">Active</option><option value="disabled">Disabled</option></select>
+            </div>
+            <div class="fg"><label>Area</label><input type="text" id="umA"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px;">
+            <button class="btn btn-p" onclick="saveUser()">💾 Save</button>
+            <button class="btn btn-o" onclick="closeUM()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MAIN AREA MODAL ═══ -->
+<div class="modal" id="maM">
+    <div class="mbox">
+        <h3 id="maMT">➕ Add Main Area</h3>
+        <div class="fgrid">
+            <div class="fg"><label>Day Number *</label><input type="number" id="maD" min="1" placeholder="1"></div>
+            <div class="fg"><label>Area Name *</label><input type="text" id="maN" placeholder="e.g., Kasur Bypass"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px;">
+            <button class="btn btn-p" onclick="saveMainArea()">💾 Save</button>
+            <button class="btn btn-o" onclick="closeAddArea()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ SUB AREA MODAL ═══ -->
+<div class="modal" id="saM">
+    <div class="mbox">
+        <h3 id="saMT">➕ Add Sub Area</h3>
+        <div class="fgrid">
+            <div class="fg"><label>Main Area *</label><select id="saMA"><option value="">Select...</option></select></div>
+            <div class="fg"><label>Sub Area Name *</label><input type="text" id="saN" placeholder="e.g., Qadirabad Abad"></div>
+            <div class="fg"><label>Total Bills</label><input type="number" id="saTB" min="0" placeholder="0"></div>
+            <div class="fg"><label>Order</label><input type="number" id="saO" min="0" value="1"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px;">
+            <button class="btn btn-p" onclick="saveSubArea()">💾 Save</button>
+            <button class="btn btn-o" onclick="closeSAModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ BULK IMPORT MODAL ═══ -->
+<div class="modal" id="bkM">
+    <div class="mbox">
+        <h3>📥 Bulk Import Sub Areas</h3>
+        <div class="fg">
+            <label>Main Area *</label>
+            <select id="bkMA"><option value="">Select main area...</option></select>
+        </div>
+        <div class="fg">
+            <label>Paste Sub Areas (One per line)</label>
+            <textarea id="bkText" rows="8" placeholder="Qadirabad Abad
+Noor Shah Wali
+Dangi Pura
+Fazal Khan Colony
+..."></textarea>
+            <div style="font-size:0.7rem;color:var(--td);margin-top:5px;">
+                💡 Format: Name only (one per line) OR Name,TotalBills (comma-separated)
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px;">
+            <button class="btn btn-p" onclick="bulkImportSubs()">📥 Import All</button>
+            <button class="btn btn-o" onclick="closeBulkModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ DETAIL PANEL ═══ -->
+<div class="dov" id="dOv" onclick="closeDetail()"></div>
+<div class="dp" id="dP">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="color:var(--p);font-size:1.05rem;" id="dTitle">📋 Details</h3>
+        <button class="btn btn-sm btn-o" onclick="closeDetail()">✕</button>
+    </div>
+    <div id="dC"></div>
+</div>
+
+<!-- ═══ VIEWER ═══ -->
+<div class="vw" id="vw">
+    <button class="vx" onclick="closeViewer()">✕</button>
+    <div id="vwC"></div>
+</div>
+
+<!-- ═══ LOADING ═══ -->
+<div class="ld" id="ld">
+    <div class="ldsp"></div>
+    <div style="color:var(--td);font-weight:600;" id="ldM">Loading...</div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="tst"></div><!-- ═══ FIREBASE SDK ═══ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ═══════════════════════════════════════════
+// FIREBASE CONFIG
+// ═══════════════════════════════════════════
+firebase.initializeApp({
+    apiKey:"AIzaSyC6-JqJHut8FbFhA5_wLVdFUt1rpuT9HME",
+    authDomain:"data-center-wasa.firebaseapp.com",
+    projectId:"data-center-wasa",
+    storageBucket:"data-center-wasa.firebasestorage.app",
+    messagingSenderId:"78737102659",
+    appId:"1:78737102659:web:33a484a19872087ac2c1f6"
+});
+const db = firebase.firestore();
+
+// Collections
+const CU = 'billUsers';
+const CM = 'mainAreas';
+const CS = 'subAreas';
+const CE = 'dailyEntries';
+const CFG = 'billSettings';
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let ADMIN = null;
+let MAIN_AREAS = [];
+let SUB_AREAS = [];
+let ENTRIES = [];
+let USERS = [];
+let SETTINGS = {};
+let editingUID = null;
+let editingMAID = null;
+let editingSAID = null;
+let SESSION_T = null;
+const SESSION_TIMEOUT = 30 * 60 * 1000;
+let CHARTS = {};
+
+// ═══════════════════════════════════════════
+// SHA-256 HASH
+// ═══════════════════════════════════════════
+async function sha256(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ═══════════════════════════════════════════
+// SESSION MANAGEMENT
+// ═══════════════════════════════════════════
+function resetSession() {
+    clearTimeout(SESSION_T);
+    SESSION_T = setTimeout(() => {
+        if (ADMIN) { toast('⏰ Session expired!', 'err'); forceLogout(); }
+    }, SESSION_TIMEOUT);
+}
+document.addEventListener('click', resetSession);
+document.addEventListener('keydown', resetSession);
+
+function forceLogout() {
+    ADMIN = null;
+    localStorage.removeItem('billAdmin');
+    document.getElementById('loginW').style.display = 'flex';
+    document.getElementById('layout').style.display = 'none';
+    clearTimeout(SESSION_T);
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+window.onload = async function() {
+    await firstTimeSetup();
+    const saved = localStorage.getItem('billAdmin');
+    if (saved) {
+        ADMIN = JSON.parse(saved);
+        await verifyAdmin();
+    }
+    loadSavedCustomization();
+};
+
+async function firstTimeSetup() {
+    try {
+        const snap = await db.collection(CU).where('role', '==', 'admin').get();
+        if (snap.empty) {
+            const hash = await sha256('admin123');
+            await db.collection(CU).add({
+                name: 'Admin',
+                phone: '03001234567',
+                password: 'admin123',
+                passHash: hash,
+                role: 'admin',
+                status: 'active',
+                area: 'Head Office',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log('Default admin created: 03001234567 / admin123');
+        }
+    } catch (e) { console.log('Setup error:', e); }
+}
+
+async function verifyAdmin() {
+    try {
+        const doc = await db.collection(CU).doc(ADMIN.id).get();
+        if (doc.exists && doc.data().role === 'admin' && doc.data().status === 'active') {
+            ADMIN = {id: doc.id, ...doc.data()};
+            localStorage.setItem('billAdmin', JSON.stringify(ADMIN));
+            showAdmin();
+        } else forceLogout();
+    } catch (e) { showAdmin(); }
+}
+
+// ═══════════════════════════════════════════
+// LOGIN / LOGOUT
+// ═══════════════════════════════════════════
+async function adminLogin() {
+    const p = document.getElementById('aP').value.trim();
+    const pw = document.getElementById('aPw').value.trim();
+    const err = document.getElementById('aE');
+
+    if (!p || !pw) { err.textContent = '⚠️ Fill all fields!'; err.style.display = 'block'; return; }
+    err.style.display = 'none';
+    showLoad('Logging in...');
+
+    try {
+        const snap = await db.collection(CU).where('phone', '==', p).get();
+        if (snap.empty) { hideLoad(); err.textContent = '❌ Account not found!'; err.style.display = 'block'; return; }
+
+        const doc = snap.docs[0];
+        const data = doc.data();
+        const h = await sha256(pw);
+
+        let ok = false;
+        if (data.passHash) ok = data.passHash === h;
+        else if (data.password) ok = data.password === pw;
+
+        if (!ok) { hideLoad(); err.textContent = '❌ Wrong password!'; err.style.display = 'block'; return; }
+        if (data.role !== 'admin') { hideLoad(); err.textContent = '⛔ Admin only!'; err.style.display = 'block'; return; }
+        if (data.status === 'disabled') { hideLoad(); err.textContent = '⛔ Account disabled!'; err.style.display = 'block'; return; }
+
+        ADMIN = {id: doc.id, ...data, passHash: h};
+        localStorage.setItem('billAdmin', JSON.stringify(ADMIN));
+        db.collection(CU).doc(doc.id).update({
+            lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+            passHash: h
+        }).catch(() => {});
+
+        hideLoad();
+        toast('✅ Welcome, ' + data.name + '!', 'ok');
+        showAdmin();
+    } catch (e) { hideLoad(); err.textContent = '❌ ' + e.message; err.style.display = 'block'; }
+}
+
+function adminLogout() {
+    if (!confirm('Logout?')) return;
+    ADMIN = null;
+    localStorage.removeItem('billAdmin');
+    clearTimeout(SESSION_T);
+    document.getElementById('loginW').style.display = 'flex';
+    document.getElementById('layout').style.display = 'none';
+    toast('👋 Logged out!');
+}
+
+async function showAdmin() {
+    document.getElementById('loginW').style.display = 'none';
+    document.getElementById('layout').style.display = 'flex';
+    resetSession();
+    await loadAll();
+
+    // Auto-refresh every 30 seconds
+    setInterval(async () => {
+        if (ADMIN) {
+            await loadEntries();
+            await loadMainAreas();
+            await loadSubAreas();
+            const active = document.querySelector('.pg.act');
+            if (active) {
+                const pgId = active.id;
+                if (pgId === 'p-dashboard') renderDashboard();
+                if (pgId === 'p-dailyentry') renderDailyEntry();
+                if (pgId === 'p-areadetail') renderAreaDetail();
+                if (pgId === 'p-mainareas') renderMainAreas();
+                if (pgId === 'p-subareas') renderSubAreas();
+                if (pgId === 'p-reports') renderReports();
+            }
+        }
+    }, 30000);
+}
+
+// ═══════════════════════════════════════════
+// LOAD ALL DATA
+// ═══════════════════════════════════════════
+async function loadAll() {
+    showLoad('Loading data...');
+    try {
+        await Promise.all([loadUsers(), loadMainAreas(), loadSubAreas(), loadEntries(), loadSettings()]);
+    } catch (e) { console.log(e); }
+    hideLoad();
+    renderDashboard();
+    updateAllFilters();
+}
+
+async function loadUsers() {
+    const snap = await db.collection(CU).get();
+    USERS = snap.docs.map(d => ({id: d.id, ...d.data()}));
+}
+
+async function loadMainAreas() {
+    try {
+        const snap = await db.collection(CM).orderBy('day', 'asc').get();
+        MAIN_AREAS = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    } catch (e) {
+        const snap = await db.collection(CM).get();
+        MAIN_AREAS = snap.docs.map(d => ({id: d.id, ...d.data()}));
+        MAIN_AREAS.sort((a, b) => (a.day || 0) - (b.day || 0));
+    }
+}
+
+async function loadSubAreas() {
+    const snap = await db.collection(CS).get();
+    SUB_AREAS = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    SUB_AREAS.sort((a, b) => (a.order || 0) - (b.order || 0));
+}
+
+async function loadEntries() {
+    try {
+        const snap = await db.collection(CE).orderBy('createdAt', 'desc').get();
+        ENTRIES = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    } catch (e) {
+        const snap = await db.collection(CE).get();
+        ENTRIES = snap.docs.map(d => ({id: d.id, ...d.data()}));
+        ENTRIES.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+    }
+}
+
+async function loadSettings() {
+    try {
+        const doc = await db.collection(CFG).doc('main').get();
+        if (doc.exists) SETTINGS = doc.data();
+        else SETTINGS = {};
+    } catch (e) { SETTINGS = {}; }
+}
+
+function updateAllFilters() {
+    // Officer filters
+    const officers = USERS.filter(u => u.role === 'officer');
+    const officerHTML = '<option value="">All Officers</option>' +
+        officers.map(o => `<option value="${o.id}">${o.name} (${o.phone})</option>`).join('');
+    ['deFilter', 'exO', 'opS'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = officerHTML;
+    });
+
+    // Main area filters
+    const areaHTML = '<option value="">All Main Areas</option>' +
+        MAIN_AREAS.map(a => `<option value="${a.id}">Day ${a.day} - ${a.name}</option>`).join('');
+    ['adArea', 'saFilter', 'exA', 'saMA', 'bkMA'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = areaHTML;
+    });
+
+    // Day filter
+    const dayHTML = '<option value="">All Days</option>' +
+        MAIN_AREAS.map(a => `<option value="${a.day}">Day ${a.day}</option>`).join('');
+    const deDay = document.getElementById('deDay');
+    if (deDay) deDay.innerHTML = dayHTML;
+}
+
+// ═══════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════
+function renderDashboard() {
+    const today = new Date().toLocaleDateString('en-GB');
+    const todayCount = ENTRIES.filter(e => e.date === today).length;
+    const officers = USERS.filter(u => u.role === 'officer').length;
+    const activeArea = MAIN_AREAS.find(a => a.sequenceStatus === 'active');
+    const completedAreas = MAIN_AREAS.filter(a => a.sequenceStatus === 'completed').length;
+
+    let totalBills = 0, totalDist = 0;
+    SUB_AREAS.forEach(s => { totalBills += (s.totalBills || 0); totalDist += (s.cumulativeDistributed || 0); });
+    const overallPct = totalBills > 0 ? Math.round((totalDist / totalBills) * 100) : 0;
+
+    const stats = [
+        {icon: '🏘️', color: 'pl', label: SETTINGS.lbl1 || 'Total Main Areas', value: MAIN_AREAS.length},
+        {icon: '✅', color: 'sl', label: SETTINGS.lbl2 || 'Completed', value: completedAreas},
+        {icon: '📅', color: 'al', label: SETTINGS.lbl3 || 'Active Day', value: activeArea ? 'Day ' + activeArea.day : '-'},
+        {icon: '📊', color: 'wl', label: SETTINGS.lbl4 || 'Overall %', value: overallPct + '%'},
+        {icon: '🏠', color: 'pl', label: 'Total Sub Areas', value: SUB_AREAS.length},
+        {icon: '📋', color: 'pl', label: 'Total Bills', value: totalBills.toLocaleString()},
+        {icon: '✔️', color: 'sl', label: 'Distributed', value: totalDist.toLocaleString()},
+        {icon: '👥', color: 'wl', label: 'Officers', value: officers}
+    ];
+
+    document.getElementById('statsGrid').innerHTML = stats.map(s => `
+        <div class="stc">
+            <div class="sti" style="background:var(--${s.color});">${s.icon}</div>
+            <div>
+                <div class="stn">${s.value}</div>
+                <div class="stl">${s.label}</div>
+            </div>
+        </div>
+    `).join('');
+
+    // Recent entries
+    const cols = ['Day', 'Main Area', 'Sub Area', 'Total', 'Distributed', '%', 'Status'];
+    document.getElementById('rHead').innerHTML = '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '<th>Officer</th><th>Date</th><th>Action</th></tr>';
+    document.getElementById('rBody').innerHTML = ENTRIES.slice(0, 10).map(e => `
+        <tr>
+            <td><span class="bd bd-p">Day ${e.day || '-'}</span></td>
+            <td>${e.mainAreaName || '-'}</td>
+            <td><strong>${e.subAreaName || '-'}</strong></td>
+            <td>${(e.totalBills || 0).toLocaleString()}</td>
+            <td class="c-s">${(e.cumulativeDistributed || 0).toLocaleString()}</td>
+            <td><strong>${e.percent || 0}%</strong></td>
+            <td>${statusBadge(e.status)}</td>
+            <td>${e.officerName || '-'}</td>
+            <td>${e.date || '-'}</td>
+            <td><button class="btn btn-sm btn-o" onclick="viewEntry('${e.id}')">👁️</button></td>
+        </tr>
+    `).join('') || '<tr><td colspan="20" style="text-align:center;padding:25px;color:var(--td);">No entries yet</td></tr>';
+
+    // Render charts
+    renderDashboardCharts();
+}
+
+function statusBadge(status) {
+    const s = status || 'Not Started';
+    if (s === 'Completed') return `<span class="bd bd-ok">${s}</span>`;
+    if (s === 'In Progress') return `<span class="bd bd-w">${s}</span>`;
+    return `<span class="bd bd-no">${s}</span>`;
+}
+
+function seqBadge(status) {
+    if (status === 'active') return '<span class="bd bd-p">ACTIVE</span>';
+    if (status === 'completed') return '<span class="bd bd-ok">COMPLETED</span>';
+    return '<span class="bd bd-no">PENDING</span>';
+}
+
+// ═══════════════════════════════════════════
+// DASHBOARD CHARTS
+// ═══════════════════════════════════════════
+function renderDashboardCharts() {
+    renderAreaChart();
+    renderStatusChart();
+    renderDailyChart();
+    renderOfficerChart();
+}
+
+function renderAreaChart() {
+    const ctx = document.getElementById('chartArea');
+    if (!ctx) return;
+    if (CHARTS.area) CHARTS.area.destroy();
+
+    const labels = MAIN_AREAS.map(a => `Day ${a.day}: ${a.name}`);
+    const distData = MAIN_AREAS.map(a => {
+        const subs = SUB_AREAS.filter(s => s.mainAreaId === a.id);
+        return subs.reduce((sum, s) => sum + (s.cumulativeDistributed || 0), 0);
+    });
+    const totalData = MAIN_AREAS.map(a => {
+        const subs = SUB_AREAS.filter(s => s.mainAreaId === a.id);
+        return subs.reduce((sum, s) => sum + (s.totalBills || 0), 0);
+    });
+
+    CHARTS.area = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {label: 'Total Bills', data: totalData, backgroundColor: '#E5E7EB', borderRadius: 6},
+                {label: 'Distributed', data: distData, backgroundColor: '#003366', borderRadius: 6}
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {legend: {position: 'bottom'}},
+            scales: {x: {beginAtZero: true, stacked: false}}
+        }
+    });
+}
+
+function renderStatusChart() {
+    const ctx = document.getElementById('chartStatus');
+    if (!ctx) return;
+    if (CHARTS.status) CHARTS.status.destroy();
+
+    const completed = SUB_AREAS.filter(s => s.status === 'Completed').length;
+    const inProgress = SUB_AREAS.filter(s => s.status === 'In Progress').length;
+    const notStarted = SUB_AREAS.filter(s => !s.status || s.status === 'Not Started').length;
+
+    CHARTS.status = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'In Progress', 'Not Started'],
+            datasets: [{
+                data: [completed, inProgress, notStarted],
+                backgroundColor: ['#10B981', '#F59E0B', '#9CA3AF'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {legend: {position: 'bottom'}}
+        }
+    });
+}
+
+function renderDailyChart() {
+    const ctx = document.getElementById('chartDaily');
+    if (!ctx) return;
+    if (CHARTS.daily) CHARTS.daily.destroy();
+
+    // Last 10 days
+    const labels = [];
+    const data = [];
+    for (let i = 9; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toLocaleDateString('en-GB');
+        labels.push(d.toLocaleDateString('en-GB', {day: '2-digit', month: 'short'}));
+        const total = ENTRIES.filter(e => e.date === dateStr)
+            .reduce((sum, e) => sum + (e.todayDistributed || 0), 0);
+        data.push(total);
+    }
+
+    CHARTS.daily = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Bills Distributed',
+                data: data,
+                borderColor: '#FF6B35',
+                backgroundColor: 'rgba(255,107,53,0.1)',
+                fill: true, tension: 0.4,
+                pointBackgroundColor: '#003366',
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {legend: {display: false}},
+            scales: {y: {beginAtZero: true}}
+        }
+    });
+}
+
+function renderOfficerChart() {
+    const ctx = document.getElementById('chartOfficer');
+    if (!ctx) return;
+    if (CHARTS.officer) CHARTS.officer.destroy();
+
+    const offData = {};
+    ENTRIES.forEach(e => {
+        const name = e.officerName || 'Unknown';
+        offData[name] = (offData[name] || 0) + (e.todayDistributed || 0);
+    });
+
+    const labels = Object.keys(offData);
+    const data = Object.values(offData);
+
+    CHARTS.officer = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Bills Distributed',
+                data: data,
+                backgroundColor: '#003366',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {legend: {display: false}},
+            scales: {y: {beginAtZero: true}}
+        }
+    });
+}
+
+// ═══════════════════════════════════════════
+// DAILY ENTRY VIEW
+// ═══════════════════════════════════════════
+function renderDailyEntry() {
+    const q = document.getElementById('deSearch').value.toLowerCase();
+    const of = document.getElementById('deFilter').value;
+    const day = document.getElementById('deDay').value;
+    const df = document.getElementById('deFrom').value;
+    const dt = document.getElementById('deTo').value;
+
+    let data = [...ENTRIES];
+    if (q) data = data.filter(e => Object.values(e).some(v => v && String(v).toLowerCase().includes(q)));
+    if (of) data = data.filter(e => e.officerId === of);
+    if (day) data = data.filter(e => String(e.day) === day);
+    if (df) data = data.filter(e => e.timestamp && e.timestamp >= df);
+    if (dt) data = data.filter(e => e.timestamp && e.timestamp <= dt + 'T23:59:59');
+
+    document.getElementById('deHead').innerHTML = `<tr>
+        <th>#</th><th>Day</th><th>Main Area</th><th>Sub Area</th>
+        <th>Total Bills</th><th>Today</th><th>Cumulative</th><th>Remaining</th>
+        <th>%</th><th>Status</th><th>Officer</th><th>Date</th><th>GPS</th><th>Actions</th>
+    </tr>`;
+
+    document.getElementById('deBody').innerHTML = data.map((e, i) => `
+        <tr>
+            <td>${i + 1}</td>
+            <td><span class="bd bd-p">Day ${e.day}</span></td>
+            <td>${e.mainAreaName || '-'}</td>
+            <td><strong>${e.subAreaName || '-'}</strong></td>
+            <td>${(e.totalBills || 0).toLocaleString()}</td>
+            <td class="c-a"><strong>${(e.todayDistributed || 0).toLocaleString()}</strong></td>
+            <td class="c-s">${(e.cumulativeDistributed || 0).toLocaleString()}</td>
+            <td class="c-w">${(e.remaining || 0).toLocaleString()}</td>
+            <td><strong>${e.percent || 0}%</strong></td>
+            <td>${statusBadge(e.status)}</td>
+            <td>${e.officerName || '-'}</td>
+            <td>${e.date || '-'}</td>
+            <td style="font-size:0.65rem;">${e.gps || '-'}</td>
+            <td>
+                <button class="btn btn-sm btn-o" onclick="viewEntry('${e.id}')">👁️</button>
+                <button class="btn btn-sm btn-r" onclick="delEntry('${e.id}')">🗑️</button>
+            </td>
+        </tr>
+    `).join('') || '<tr><td colspan="20" style="text-align:center;padding:25px;color:var(--td);">No entries found</td></tr>';
+}
+
+function viewEntry(id) {
+    const e = ENTRIES.find(x => x.id === id);
+    if (!e) { toast('Not found!', 'err'); return; }
+
+    document.getElementById('dTitle').textContent = '📋 Entry Details';
+    let h = '<div style="display:flex;gap:8px;margin-bottom:14px;">';
+    h += `<button class="btn btn-sm btn-r" onclick="delEntry('${id}');closeDetail();">🗑️ Delete</button>`;
+    h += '</div>';
+
+    h += `<div class="drow"><span class="dl">📅 Day</span><span class="dv">Day ${e.day || '-'}</span></div>`;
+    h += `<div class="drow"><span class="dl">🏘️ Main Area</span><span class="dv">${e.mainAreaName || '-'}</span></div>`;
+    h += `<div class="drow"><span class="dl">🏠 Sub Area</span><span class="dv">${e.subAreaName || '-'}</span></div>`;
+    h += `<div class="drow"><span class="dl">📋 Total Bills</span><span class="dv">${(e.totalBills || 0).toLocaleString()}</span></div>`;
+    h += `<div class="drow"><span class="dl">✅ Today</span><span class="dv">${(e.todayDistributed || 0).toLocaleString()}</span></div>`;
+    h += `<div class="drow"><span class="dl">📊 Cumulative</span><span class="dv">${(e.cumulativeDistributed || 0).toLocaleString()}</span></div>`;
+    h += `<div class="drow"><span class="dl">📉 Remaining</span><span class="dv">${(e.remaining || 0).toLocaleString()}</span></div>`;
+    h += `<div class="drow"><span class="dl">📈 Progress</span><span class="dv">${e.percent || 0}%</span></div>`;
+    h += `<div class="drow"><span class="dl">📊 Status</span><span class="dv">${e.status || '-'}</span></div>`;
+    h += `<div class="drow"><span class="dl">👤 Officer</span><span class="dv">${e.officerName || '-'}</span></div>`;
+    h += `<div class="drow"><span class="dl">📞 Phone</span><span class="dv">${e.officerPhone || '-'}</span></div>`;
+    h += `<div class="drow"><span class="dl">📅 Date</span><span class="dv">${e.date || '-'}</span></div>`;
+    if (e.gps) h += `<div class="drow"><span class="dl">📍 GPS</span><span class="dv">${e.gps}</span></div>`;
+    if (e.remarks) h += `<div class="drow"><span class="dl">💬 Remarks</span><span class="dv">${e.remarks}</span></div>`;
+
+    if (e.media && e.media.length) {
+        h += '<h4 style="color:var(--p);margin:14px 0 8px;font-size:0.9rem;">📸 Media Files</h4><div class="mg">';
+        h += e.media.map(m => m.type === 'image'
+            ? `<div class="mi"><img src="${m.url}" onclick="openViewer('${m.url}','image')"></div>`
+            : `<div class="mi"><video src="${m.url}" onclick="openViewer('${m.url}','video')"></video></div>`
+        ).join('');
+        h += '</div>';
+    }
+
+    document.getElementById('dC').innerHTML = h;
+    document.getElementById('dP').classList.add('open');
+    document.getElementById('dOv').classList.add('open');
+}
+
+async function delEntry(id) {
+    if (!confirm('Delete this entry permanently?')) return;
+    showLoad('Deleting...');
+    try {
+        await db.collection(CE).doc(id).delete();
+        ENTRIES = ENTRIES.filter(e => e.id !== id);
+        renderDailyEntry();
+        renderDashboard();
+        toast('🗑️ Deleted!', 'ok');
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+// ═══════════════════════════════════════════
+// AREA DETAIL
+// ═══════════════════════════════════════════
+function renderAreaDetail() {
+    const q = document.getElementById('adSearch').value.toLowerCase();
+    const area = document.getElementById('adArea').value;
+    const status = document.getElementById('adStatus').value;
+    const rec = document.getElementById('adRecovery').value;
+
+    let data = [...SUB_AREAS];
+    if (q) data = data.filter(s => (s.name || '').toLowerCase().includes(q) || (s.mainAreaName || '').toLowerCase().includes(q));
+    if (area) data = data.filter(s => s.mainAreaId === area);
+    if (status) data = data.filter(s => (s.status || 'Not Started') === status);
+    if (rec) data = data.filter(s => (s.recovery || 'Pending') === rec);
+
+    document.getElementById('adBody').innerHTML = data.map((s, i) => {
+        const ma = MAIN_AREAS.find(a => a.id === s.mainAreaId);
+        const day = ma ? ma.day : '-';
+        const recovery = s.recovery || 'Pending';
+        return `<tr>
+            <td>${i + 1}</td>
+            <td><span class="bd bd-p">Day ${day}</span></td>
+            <td>${ma ? ma.name : '-'}</td>
+            <td><strong>${s.name || '-'}</strong></td>
+            <td>${(s.totalBills || 0).toLocaleString()}</td>
+            <td class="c-s">${(s.cumulativeDistributed || 0).toLocaleString()}</td>
+            <td class="c-w">${((s.totalBills || 0) - (s.cumulativeDistributed || 0)).toLocaleString()}</td>
+            <td><strong>${s.percent || 0}%</strong><div class="prog-mini"><div class="prog-mini-fill" style="width:${s.percent || 0}%"></div></div></td>
+            <td>${statusBadge(s.status)}</td>
+            <td>
+                <select onchange="updateRecovery('${s.id}',this.value)" style="padding:4px 8px;font-size:0.7rem;border:1px solid var(--b);border-radius:6px;">
+                    <option value="Pending" ${recovery === 'Pending' ? 'selected' : ''}>Pending</option>
+                    <option value="Recovered" ${recovery === 'Recovered' ? 'selected' : ''}>Recovered</option>
+                </select>
+            </td>
+            <td><button class="btn btn-sm btn-o" onclick="viewSub('${s.id}')">👁️</button></td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="11" style="text-align:center;padding:25px;color:var(--td);">No sub areas found</td></tr>';
+}
+
+async function updateRecovery(id, value) {
+    try {
+        await db.collection(CS).doc(id).update({
+            recovery: value,
+            recoveryUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            recoveryUpdatedBy: ADMIN.name
+        });
+        const i = SUB_AREAS.findIndex(s => s.id === id);
+        if (i > -1) SUB_AREAS[i].recovery = value;
+        toast('✅ Recovery updated!', 'ok');
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+}
+
+function viewSub(id) {
+    const s = SUB_AREAS.find(x => x.id === id);
+    if (!s) return;
+    const ma = MAIN_AREAS.find(a => a.id === s.mainAreaId);
+    const entries = ENTRIES.filter(e => e.subAreaId === id);
+
+    document.getElementById('dTitle').textContent = '🏠 ' + s.name;
+    let h = `<div class="drow"><span class="dl">📅 Day</span><span class="dv">Day ${ma ? ma.day : '-'}</span></div>`;
+    h += `<div class="drow"><span class="dl">🏘️ Main Area</span><span class="dv">${ma ? ma.name : '-'}</span></div>`;
+    h += `<div class="drow"><span class="dl">📋 Total Bills</span><span class="dv">${(s.totalBills || 0).toLocaleString()}</span></div>`;
+    h += `<div class="drow"><span class="dl">✅ Distributed</span><span class="dv">${(s.cumulativeDistributed || 0).toLocaleString()}</span></div>`;
+    h += `<div class="drow"><span class="dl">📉 Remaining</span><span class="dv">${((s.totalBills || 0) - (s.cumulativeDistributed || 0)).toLocaleString()}</span></div>`;
+    h += `<div class="drow"><span class="dl">📊 Progress</span><span class="dv">${s.percent || 0}%</span></div>`;
+    h += `<div class="drow"><span class="dl">📊 Status</span><span class="dv">${s.status || 'Not Started'}</span></div>`;
+    h += `<div class="drow"><span class="dl">💰 Recovery</span><span class="dv">${s.recovery || 'Pending'}</span></div>`;
+    h += `<div class="drow"><span class="dl">📝 Total Entries</span><span class="dv">${entries.length}</span></div>`;
+
+    if (entries.length) {
+        h += '<h4 style="color:var(--p);margin:14px 0 8px;font-size:0.9rem;">📋 All Entries</h4>';
+        entries.forEach(e => {
+            h += `<div style="background:var(--bg);padding:8px;border-radius:8px;margin-bottom:5px;font-size:0.75rem;">
+                <strong>${e.date}</strong> - ${e.officerName}<br>
+                Today: <strong class="c-a">${e.todayDistributed}</strong> | 
+                Cumulative: <strong class="c-s">${e.cumulativeDistributed}</strong>
+            </div>`;
+        });
+    }
+
+    document.getElementById('dC').innerHTML = h;
+    document.getElementById('dP').classList.add('open');
+    document.getElementById('dOv').classList.add('open');
+}
+
+function closeDetail() {
+    document.getElementById('dP').classList.remove('open');
+    document.getElementById('dOv').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════
+// SEQUENCE SETUP
+// ═══════════════════════════════════════════
+function renderSequence() {
+    const c = document.getElementById('sequenceList');
+    if (!MAIN_AREAS.length) {
+        c.innerHTML = '<div style="text-align:center;padding:30px;color:var(--td);"><div style="font-size:2rem;">📋</div><p>No areas configured. Add Main Areas first!</p></div>';
+        return;
+    }
+
+    c.innerHTML = MAIN_AREAS.map(a => {
+        const subs = SUB_AREAS.filter(s => s.mainAreaId === a.id);
+        const status = a.sequenceStatus || 'pending';
+        const cardClass = status === 'active' ? 'active-seq' : status === 'completed' ? 'completed-seq' : '';
+
+        return `<div class="setup-item ${cardClass}">
+            <div class="setup-day">${a.day}</div>
+            <div class="setup-info">
+                <div class="setup-name">${a.name}</div>
+                <div class="setup-meta">${subs.length} sub-areas • ${seqBadge(status)}</div>
+            </div>
+            <div class="setup-actions">
+                ${status !== 'active' ? `<button class="btn btn-sm btn-p" onclick="setActiveArea('${a.id}')">🟢 Activate</button>` : ''}
+                ${status !== 'completed' ? `<button class="btn btn-sm btn-s" onclick="markCompleted('${a.id}')">✅ Complete</button>` : ''}
+                ${status !== 'pending' ? `<button class="btn btn-sm btn-w" onclick="markPending('${a.id}')">⏳ Reset</button>` : ''}
+                <button class="btn btn-sm btn-o" onclick="editMainArea('${a.id}')">✏️</button>
+                <button class="btn btn-sm btn-r" onclick="delMainArea('${a.id}')">🗑️</button>
+            </div>
+        </div>`;
+    }).join('');
+
+    // Update auto-sequence button
+    const autoBtn = document.getElementById('autoSeqLabel');
+    if (autoBtn) autoBtn.textContent = SETTINGS.autoSequence !== false ? '🤖 Auto-Sequence: ON' : '🤖 Auto-Sequence: OFF';
+}
+
+async function setActiveArea(id) {
+    if (!confirm('Set this area as ACTIVE? Others will be updated.')) return;
+    showLoad('Updating...');
+    try {
+        // Reset all to pending except completed
+        const batch = db.batch();
+        for (let a of MAIN_AREAS) {
+            if (a.sequenceStatus !== 'completed') {
+                batch.update(db.collection(CM).doc(a.id), {sequenceStatus: 'pending'});
+            }
+        }
+        // Set selected as active
+        batch.update(db.collection(CM).doc(id), {
+            sequenceStatus: 'active',
+            activatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await batch.commit();
+
+        await loadMainAreas();
+        renderSequence();
+        renderDashboard();
+        toast('✅ Area activated!', 'ok');
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+async function markCompleted(id) {
+    if (!confirm('Mark this area as COMPLETED?')) return;
+    showLoad('Updating...');
+    try {
+        await db.collection(CM).doc(id).update({
+            sequenceStatus: 'completed',
+            completedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await loadMainAreas();
+        renderSequence();
+        renderDashboard();
+        toast('✅ Marked as completed!', 'ok');
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+async function markPending(id) {
+    if (!confirm('Reset this area to PENDING?')) return;
+    showLoad('Updating...');
+    try {
+        await db.collection(CM).doc(id).update({sequenceStatus: 'pending'});
+        await loadMainAreas();
+        renderSequence();
+        toast('✅ Reset to pending!', 'ok');
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+async function resetSequence() {
+    if (!confirm('⚠️ Reset ALL areas to PENDING status? This will not delete data.')) return;
+    showLoad('Resetting...');
+    try {
+        const batch = db.batch();
+        for (let a of MAIN_AREAS) {
+            batch.update(db.collection(CM).doc(a.id), {sequenceStatus: 'pending'});
+        }
+        await batch.commit();
+        await loadMainAreas();
+        renderSequence();
+        toast('✅ All reset to pending!', 'ok');
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+async function toggleAutoSequence() {
+    const current = SETTINGS.autoSequence !== false;
+    const newVal = !current;
+    try {
+        await db.collection(CFG).doc('main').set({autoSequence: newVal}, {merge: true});
+        SETTINGS.autoSequence = newVal;
+        renderSequence();
+        toast('✅ Auto-Sequence: ' + (newVal ? 'ON' : 'OFF'), 'ok');
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+}
+
+// ═══════════════════════════════════════════
+// MAIN AREAS CRUD
+// ═══════════════════════════════════════════
+function renderMainAreas() {
+    const q = document.getElementById('maSearch').value.toLowerCase();
+    let data = MAIN_AREAS;
+    if (q) data = data.filter(a => (a.name || '').toLowerCase().includes(q));
+
+    document.getElementById('maBody').innerHTML = data.map((a, i) => {
+        const subs = SUB_AREAS.filter(s => s.mainAreaId === a.id);
+        const totalBills = subs.reduce((sum, s) => sum + (s.totalBills || 0), 0);
+        const totalDist = subs.reduce((sum, s) => sum + (s.cumulativeDistributed || 0), 0);
+        const pct = totalBills > 0 ? Math.round((totalDist / totalBills) * 100) : 0;
+
+        return `<tr>
+            <td>${i + 1}</td>
+            <td><span class="bd bd-p">Day ${a.day}</span></td>
+            <td><strong>${a.name}</strong></td>
+            <td>${subs.length}</td>
+            <td>${totalBills.toLocaleString()}</td>
+            <td class="c-s">${totalDist.toLocaleString()}</td>
+            <td><strong>${pct}%</strong><div class="prog-mini"><div class="prog-mini-fill" style="width:${pct}%"></div></div></td>
+            <td>${seqBadge(a.sequenceStatus)}</td>
+            <td>
+                <button class="btn btn-sm btn-o" onclick="editMainArea('${a.id}')">✏️</button>
+                <button class="btn btn-sm btn-r" onclick="delMainArea('${a.id}')">🗑️</button>
+            </td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="9" style="text-align:center;padding:25px;">No areas</td></tr>';
+}
+
+function openAddArea() {
+    editingMAID = null;
+    document.getElementById('maMT').textContent = '➕ Add Main Area';
+    document.getElementById('maD').value = MAIN_AREAS.length + 1;
+    document.getElementById('maN').value = '';
+    document.getElementById('maM').classList.add('open');
+}
+
+function editMainArea(id) {
+    const a = MAIN_AREAS.find(x => x.id === id);
+    if (!a) return;
+    editingMAID = id;
+    document.getElementById('maMT').textContent = '✏️ Edit Main Area';
+    document.getElementById('maD').value = a.day;
+    document.getElementById('maN').value = a.name;
+    document.getElementById('maM').classList.add('open');
+}
+
+function closeAddArea() {
+    document.getElementById('maM').classList.remove('open');
+    editingMAID = null;
+}
+
+async function saveMainArea() {
+    const day = parseInt(document.getElementById('maD').value);
+    const name = document.getElementById('maN').value.trim();
+    if (!day || !name) { toast('⚠️ Fill all fields!', 'err'); return; }
+
+    showLoad('Saving...');
+    try {
+        const data = {day, name, updatedAt: firebase.firestore.FieldValue.serverTimestamp()};
+        if (editingMAID) {
+            await db.collection(CM).doc(editingMAID).update(data);
+            toast('✅ Updated!', 'ok');
+        } else {
+            data.sequenceStatus = MAIN_AREAS.length === 0 ? 'active' : 'pending';
+            data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection(CM).add(data);
+            toast('✅ Added!', 'ok');
+        }
+        closeAddArea();
+        await loadMainAreas();
+        renderMainAreas();
+        renderSequence();
+        renderDashboard();
+        updateAllFilters();
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+async function delMainArea(id) {
+    const subs = SUB_AREAS.filter(s => s.mainAreaId === id);
+    if (subs.length > 0) {
+        if (!confirm(`⚠️ This area has ${subs.length} sub-areas. Delete area AND all sub-areas?`)) return;
+    } else {
+        if (!confirm('Delete this area?')) return;
+    }
+
+    showLoad('Deleting...');
+    try {
+        // Delete all sub areas first
+        const batch = db.batch();
+        for (let s of subs) {
+            batch.delete(db.collection(CS).doc(s.id));
+        }
+        batch.delete(db.collection(CM).doc(id));
+        await batch.commit();
+
+        await loadMainAreas();
+        await loadSubAreas();
+        renderMainAreas();
+        renderSequence();
+        renderDashboard();
+        updateAllFilters();
+        toast('🗑️ Deleted!', 'ok');
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+// ═══════════════════════════════════════════
+// SUB AREAS CRUD
+// ═══════════════════════════════════════════
+function renderSubAreas() {
+    const q = document.getElementById('saSearch').value.toLowerCase();
+    const filter = document.getElementById('saFilter').value;
+    let data = [...SUB_AREAS];
+    if (q) data = data.filter(s => (s.name || '').toLowerCase().includes(q));
+    if (filter) data = data.filter(s => s.mainAreaId === filter);
+
+    document.getElementById('saBody').innerHTML = data.map((s, i) => {
+        const ma = MAIN_AREAS.find(a => a.id === s.mainAreaId);
+        return `<tr>
+            <td>${i + 1}</td>
+            <td>${ma ? `Day ${ma.day}: ${ma.name}` : '-'}</td>
+            <td><strong>${s.name}</strong></td>
+            <td>${(s.totalBills || 0).toLocaleString()}</td>
+            <td class="c-s">${(s.cumulativeDistributed || 0).toLocaleString()}</td>
+            <td><strong>${s.percent || 0}%</strong></td>
+            <td>${statusBadge(s.status)}</td>
+            <td>${(s.recovery || 'Pending')}</td>
+            <td>
+                <button class="btn btn-sm btn-o" onclick="editSub('${s.id}')">✏️</button>
+                <button class="btn btn-sm btn-r" onclick="delSub('${s.id}')">🗑️</button>
+            </td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="9" style="text-align:center;padding:25px;">No sub areas</td></tr>';
+}
+
+function openAddSub() {
+    editingSAID = null;
+    document.getElementById('saMT').textContent = '➕ Add Sub Area';
+    document.getElementById('saMA').value = '';
+    document.getElementById('saN').value = '';
+    document.getElementById('saTB').value = '';
+    document.getElementById('saO').value = SUB_AREAS.length + 1;
+    document.getElementById('saM').classList.add('open');
+}
+
+function editSub(id) {
+    const s = SUB_AREAS.find(x => x.id === id);
+    if (!s) return;
+    editingSAID = id;
+    document.getElementById('saMT').textContent = '✏️ Edit Sub Area';
+    document.getElementById('saMA').value = s.mainAreaId || '';
+    document.getElementById('saN').value = s.name || '';
+    document.getElementById('saTB').value = s.totalBills || '';
+    document.getElementById('saO').value = s.order || 1;
+    document.getElementById('saM').classList.add('open');
+}
+
+function closeSAModal() {
+    document.getElementById('saM').classList.remove('open');
+    editingSAID = null;
+}
+
+async function saveSubArea() {
+    const mainAreaId = document.getElementById('saMA').value;
+    const name = document.getElementById('saN').value.trim();
+    const totalBills = parseInt(document.getElementById('saTB').value) || 0;
+    const order = parseInt(document.getElementById('saO').value) || 1;
+
+    if (!mainAreaId || !name) { toast('⚠️ Main Area and Name required!', 'err'); return; }
+
+    const ma = MAIN_AREAS.find(a => a.id === mainAreaId);
+
+    showLoad('Saving...');
+    try {
+        const data = {
+            mainAreaId,
+            mainAreaName: ma ? ma.name : '',
+            day: ma ? ma.day : 0,
+            name,
+            totalBills,
+            order,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (editingSAID) {
+            await db.collection(CS).doc(editingSAID).update(data);
+            toast('✅ Updated!', 'ok');
+        } else {
+            data.cumulativeDistributed = 0;
+            data.remaining = totalBills;
+            data.percent = 0;
+            data.status = 'Not Started';
+            data.recovery = 'Pending';
+            data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection(CS).add(data);
+            toast('✅ Added!', 'ok');
+        }
+
+        closeSAModal();
+        await loadSubAreas();
+        renderSubAreas();
+        renderDashboard();
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+async function delSub(id) {
+    if (!confirm('Delete this sub area?')) return;
+    showLoad('Deleting...');
+    try {
+        await db.collection(CS).doc(id).delete();
+        SUB_AREAS = SUB_AREAS.filter(s => s.id !== id);
+        renderSubAreas();
+        renderDashboard();
+        toast('🗑️ Deleted!', 'ok');
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+// ═══════════════════════════════════════════
+// BULK IMPORT
+// ═══════════════════════════════════════════
+function openBulkAdd() {
+    document.getElementById('bkMA').value = '';
+    document.getElementById('bkText').value = '';
+    document.getElementById('bkM').classList.add('open');
+}
+
+function closeBulkModal() {
+    document.getElementById('bkM').classList.remove('open');
+}
+
+async function bulkImportSubs() {
+    const mainAreaId = document.getElementById('bkMA').value;
+    const text = document.getElementById('bkText').value.trim();
+    if (!mainAreaId || !text) { toast('⚠️ Select area and paste data!', 'err'); return; }
+
+    const ma = MAIN_AREAS.find(a => a.id === mainAreaId);
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+
+    if (!lines.length) { toast('⚠️ No valid lines!', 'err'); return; }
+    if (!confirm(`Import ${lines.length} sub areas to "${ma.name}"?`)) return;
+
+    showLoad(`Importing ${lines.length} sub areas...`);
+    let ok = 0;
+    try {
+        const startOrder = SUB_AREAS.filter(s => s.mainAreaId === mainAreaId).length + 1;
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const parts = line.split(',').map(p => p.trim());
+            const name = parts[0];
+            const totalBills = parts[1] ? parseInt(parts[1]) || 0 : 0;
+
+            await db.collection(CS).add({
+                mainAreaId,
+                mainAreaName: ma.name,
+                day: ma.day,
+                name,
+                totalBills,
+                cumulativeDistributed: 0,
+                remaining: totalBills,
+                percent: 0,
+                status: 'Not Started',
+                recovery: 'Pending',
+                order: startOrder + i,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            ok++;
+        }
+        closeBulkModal();
+        await loadSubAreas();
+        renderSubAreas();
+        renderDashboard();
+        toast(`✅ ${ok} sub areas imported!`, 'ok');
+    } catch (e) { toast('❌ Import error: ' + e.message, 'err'); }
+    hideLoad();
+}
+
+// ═══════════════════════════════════════════
+// USERS CRUD
+// ═══════════════════════════════════════════
+function renderUsers() {
+    const q = document.getElementById('uSearch').value.toLowerCase();
+    let data = USERS;
+    if (q) data = data.filter(u => (u.name || '').toLowerCase().includes(q) || (u.phone || '').includes(q));
+
+    document.getElementById('uBody').innerHTML = data.map((u, i) => {
+        const entries = ENTRIES.filter(e => e.officerId === u.id).length;
+        return `<tr>
+            <td>${i + 1}</td>
+            <td><strong>${u.name || '-'}</strong></td>
+            <td>${u.phone || '-'}</td>
+            <td>${u.role || '-'}</td>
+            <td><span class="bd ${u.status === 'active' ? 'bd-ok' : 'bd-no'}">${u.status || 'active'}</span></td>
+            <td>${u.area || '-'}</td>
+            <td>${entries}</td>
+            <td>
+                <button class="btn btn-sm btn-o" onclick="editUser('${u.id}')">✏️</button>
+                <button class="btn btn-sm btn-r" onclick="delUser('${u.id}')">🗑️</button>
+            </td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="8" style="text-align:center;padding:25px;">No users</td></tr>';
+}
+
+function openAddUser() {
+    editingUID = null;
+    document.getElementById('uMT').textContent = '➕ Add User';
+    ['umN', 'umP', 'umPw', 'umA'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('umR').value = 'officer';
+    document.getElementById('umS').value = 'active';
+    document.getElementById('uM').classList.add('open');
+}
+
+function editUser(id) {
+    const u = USERS.find(x => x.id === id);
+    if (!u) return;
+    editingUID = id;
+    document.getElementById('uMT').textContent = '✏️ Edit User';
+    document.getElementById('umN').value = u.name || '';
+    document.getElementById('umP').value = u.phone || '';
+    document.getElementById('umPw').value = u.password || '';
+    document.getElementById('umR').value = u.role || 'officer';
+    document.getElementById('umS').value = u.status || 'active';
+    document.getElementById('umA').value = u.area || '';
+    document.getElementById('uM').classList.add('open');
+}
+
+function closeUM() {
+    document.getElementById('uM').classList.remove('open');
+    editingUID = null;
+}
+
+async function saveUser() {
+    const name = document.getElementById('umN').value.trim();
+    const phone = document.getElementById('umP').value.trim();
+    const pass = document.getElementById('umPw').value.trim();
+    const role = document.getElementById('umR').value;
+    const status = document.getElementById('umS').value;
+    const area = document.getElementById('umA').value.trim();
+
+    if (!name || !phone || !pass) { toast('⚠️ Name, Phone, Password required!', 'err'); return; }
+    if (phone.length !== 11) { toast('⚠️ Phone must be 11 digits!', 'err'); return; }
+    if (USERS.find(u => u.phone === phone && u.id !== editingUID)) { toast('❌ Phone exists!', 'err'); return; }
+
+    showLoad('Saving...');
+    try {
+        const h = await sha256(pass);
+        const data = {name, phone, password: pass, passHash: h, role, status, area, updatedAt: firebase.firestore.FieldValue.serverTimestamp()};
+
+        if (editingUID) {
+            await db.collection(CU).doc(editingUID).update(data);
+            toast('✅ Updated!', 'ok');
+        } else {
+            data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection(CU).add(data);
+            toast('✅ Created!', 'ok');
+        }
+
+        closeUM();
+        await loadUsers();
+        renderUsers();
+        renderDashboard();
+        updateAllFilters();
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+async function delUser(id) {
+    const u = USERS.find(x => x.id === id);
+    if (u && u.id === ADMIN.id) { toast('⚠️ Cannot delete yourself!', 'err'); return; }
+    if (!confirm(`Delete user "${u?.name}"?`)) return;
+
+    showLoad('Deleting...');
+    try {
+        await db.collection(CU).doc(id).delete();
+        USERS = USERS.filter(x => x.id !== id);
+        renderUsers();
+        renderDashboard();
+        updateAllFilters();
+        toast('🗑️ Deleted!', 'ok');
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+// ═══════════════════════════════════════════
+// REPORTS
+// ═══════════════════════════════════════════
+function renderReports() {
+    renderCompletionChart();
+    renderRecoveryChart();
+    renderTrendChart();
+    renderAreaPerfChart();
+}
+
+function renderCompletionChart() {
+    const ctx = document.getElementById('rptCompletion');
+    if (!ctx) return;
+    if (CHARTS.completion) CHARTS.completion.destroy();
+
+    const labels = MAIN_AREAS.map(a => 'Day ' + a.day);
+    const data = MAIN_AREAS.map(a => {
+        const subs = SUB_AREAS.filter(s => s.mainAreaId === a.id);
+        const totalBills = subs.reduce((sum, s) => sum + (s.totalBills || 0), 0);
+        const totalDist = subs.reduce((sum, s) => sum + (s.cumulativeDistributed || 0), 0);
+        return totalBills > 0 ? Math.round((totalDist / totalBills) * 100) : 0;
+    });
+
+    CHARTS.completion = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '% Completion',
+                data: data,
+                backgroundColor: data.map(v => v >= 100 ? '#10B981' : v >= 50 ? '#F59E0B' : '#EF4444'),
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {legend: {display: false}},
+            scales: {y: {beginAtZero: true, max: 100, ticks: {callback: v => v + '%'}}}
+        }
+    });
+}
+
+function renderRecoveryChart() {
+    const ctx = document.getElementById('rptRecovery');
+    if (!ctx) return;
+    if (CHARTS.recovery) CHARTS.recovery.destroy();
+
+    const recovered = SUB_AREAS.filter(s => s.recovery === 'Recovered').length;
+    const pending = SUB_AREAS.filter(s => !s.recovery || s.recovery === 'Pending').length;
+
+    CHARTS.recovery = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Recovered', 'Pending'],
+            datasets: [{data: [recovered, pending], backgroundColor: ['#10B981', '#F59E0B'], borderWidth: 0}]
+        },
+        options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {position: 'bottom'}}}
+    });
+}
+
+function renderTrendChart() {
+    const ctx = document.getElementById('rptTrend');
+    if (!ctx) return;
+    if (CHARTS.trend) CHARTS.trend.destroy();
+
+    const labels = [];
+    const data = [];
+    for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toLocaleDateString('en-GB');
+        labels.push(d.getDate() + '/' + (d.getMonth() + 1));
+        const total = ENTRIES.filter(e => e.date === dateStr).reduce((sum, e) => sum + (e.todayDistributed || 0), 0);
+        data.push(total);
+    }
+
+    CHARTS.trend = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Daily Distribution',
+                data: data,
+                borderColor: '#003366',
+                backgroundColor: 'rgba(0,51,102,0.1)',
+                fill: true, tension: 0.4
+            }]
+        },
+        options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}}, scales: {y: {beginAtZero: true}}}
+    });
+}
+
+function renderAreaPerfChart() {
+    const ctx = document.getElementById('rptArea');
+    if (!ctx) return;
+    if (CHARTS.rptArea) CHARTS.rptArea.destroy();
+
+    const labels = MAIN_AREAS.map(a => a.name);
+    const data = MAIN_AREAS.map(a => {
+        const subs = SUB_AREAS.filter(s => s.mainAreaId === a.id);
+        return subs.reduce((sum, s) => sum + (s.cumulativeDistributed || 0), 0);
+    });
+
+    CHARTS.rptArea = new Chart(ctx, {
+        type: 'polarArea',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: ['#003366', '#FF6B35', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16', '#EC4899', '#F97316']
+            }]
+        },
+        options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {position: 'bottom'}}}
+    });
+}
+
+// ═══════════════════════════════════════════
+// CUSTOMIZATION
+// ═══════════════════════════════════════════
+function prvColor() {
+    const r = document.documentElement.style;
+    r.setProperty('--p', document.getElementById('cP').value);
+    r.setProperty('--pd', document.getElementById('cPd').value);
+    r.setProperty('--pl', document.getElementById('cPl').value);
+    r.setProperty('--a', document.getElementById('cA').value);
+    r.setProperty('--bg', document.getElementById('cB').value);
+    r.setProperty('--c', document.getElementById('cC').value);
+    r.setProperty('--t', document.getElementById('cT').value);
+    r.setProperty('--s', document.getElementById('cS').value);
+    r.setProperty('--w', document.getElementById('cW').value);
+    r.setProperty('--r', document.getElementById('cR').value);
+}
+
+function prvFont() {
+    document.body.style.fontFamily = document.getElementById('cFont').value;
+}
+
+function prvRadius() {
+    document.documentElement.style.setProperty('--br', document.getElementById('cRadius').value);
+}
+
+function applyTheme(theme) {
+    const themes = {
+        blue: {p:'#003366',pd:'#001F3F',pl:'#E6F0FA',a:'#FF6B35'},
+        green: {p:'#065F46',pd:'#064E3B',pl:'#D1FAE5',a:'#F59E0B'},
+        red: {p:'#991B1B',pd:'#7F1D1D',pl:'#FEE2E2',a:'#3B82F6'}
+    };
+    const t = themes[theme];
+    if (!t) return;
+    document.getElementById('cP').value = t.p;
+    document.getElementById('cPd').value = t.pd;
+    document.getElementById('cPl').value = t.pl;
+    document.getElementById('cA').value = t.a;
+    prvColor();
+    toast('✅ Theme applied! Click Save to persist.', 'ok');
+}
+
+async function saveCustomization() {
+    const data = {
+        primary: document.getElementById('cP').value,
+        primaryDark: document.getElementById('cPd').value,
+        primaryLight: document.getElementById('cPl').value,
+        accent: document.getElementById('cA').value,
+        bg: document.getElementById('cB').value,
+        card: document.getElementById('cC').value,
+        text: document.getElementById('cT').value,
+        success: document.getElementById('cS').value,
+        warning: document.getElementById('cW').value,
+        danger: document.getElementById('cR').value,
+        font: document.getElementById('cFont').value,
+        radius: document.getElementById('cRadius').value,
+        appTitle: document.getElementById('cAppTitle').value,
+        appSubtitle: document.getElementById('cAppSub').value,
+        adminTitle: document.getElementById('cAdminTitle').value,
+        adminSubtitle: document.getElementById('cAdminSub').value,
+        loginTitle: document.getElementById('cLoginTitle').value,
+        lbl1: document.getElementById('cLbl1').value,
+        lbl2: document.getElementById('cLbl2').value,
+        lbl3: document.getElementById('cLbl3').value,
+        lbl4: document.getElementById('cLbl4').value
+    };
+
+    showLoad('Saving customization...');
+    try {
+        await db.collection(CFG).doc('main').set(data, {merge: true});
+        localStorage.setItem('billCust', JSON.stringify(data));
+        SETTINGS = {...SETTINGS, ...data};
+        applyCustomization(data);
+        toast('✅ Customization saved!', 'ok');
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+function loadSavedCustomization() {
+    try {
+        const saved = localStorage.getItem('billCust');
+        if (saved) applyCustomization(JSON.parse(saved));
+    } catch (e) {}
+}
+
+function applyCustomization(d) {
+    if (!d) return;
+    const r = document.documentElement.style;
+    if (d.primary) { r.setProperty('--p', d.primary); const el = document.getElementById('cP'); if (el) el.value = d.primary; }
+    if (d.primaryDark) { r.setProperty('--pd', d.primaryDark); const el = document.getElementById('cPd'); if (el) el.value = d.primaryDark; }
+    if (d.primaryLight) { r.setProperty('--pl', d.primaryLight); const el = document.getElementById('cPl'); if (el) el.value = d.primaryLight; }
+    if (d.accent) { r.setProperty('--a', d.accent); const el = document.getElementById('cA'); if (el) el.value = d.accent; }
+    if (d.bg) { r.setProperty('--bg', d.bg); const el = document.getElementById('cB'); if (el) el.value = d.bg; }
+    if (d.card) { r.setProperty('--c', d.card); const el = document.getElementById('cC'); if (el) el.value = d.card; }
+    if (d.text) { r.setProperty('--t', d.text); const el = document.getElementById('cT'); if (el) el.value = d.text; }
+    if (d.success) { r.setProperty('--s', d.success); const el = document.getElementById('cS'); if (el) el.value = d.success; }
+    if (d.warning) { r.setProperty('--w', d.warning); const el = document.getElementById('cW'); if (el) el.value = d.warning; }
+    if (d.danger) { r.setProperty('--r', d.danger); const el = document.getElementById('cR'); if (el) el.value = d.danger; }
+    if (d.font) { document.body.style.fontFamily = d.font; const el = document.getElementById('cFont'); if (el) el.value = d.font; }
+    if (d.radius) { r.setProperty('--br', d.radius); const el = document.getElementById('cRadius'); if (el) el.value = d.radius; }
+    if (d.adminTitle) { const el = document.getElementById('sbTitle'); if (el) el.textContent = d.adminTitle; }
+    if (d.adminSubtitle) { const el = document.getElementById('sbSub'); if (el) el.textContent = d.adminSubtitle; }
+    if (d.loginTitle) { const el = document.getElementById('loginTitle'); if (el) el.textContent = d.loginTitle; }
+}
+
+function resetCustomization() {
+    if (!confirm('Reset to default? Reload page after this.')) return;
+    localStorage.removeItem('billCust');
+    db.collection(CFG).doc('main').delete().catch(() => {});
+    toast('🔄 Reset! Reloading...', 'ok');
+    setTimeout(() => location.reload(), 1000);
+}
+
+// ═══════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════
+async function changeAdminPass() {
+    const o = document.getElementById('apO').value.trim();
+    const n = document.getElementById('apN').value.trim();
+    if (!o || !n) { toast('⚠️ Fill both!', 'err'); return; }
+    const h = await sha256(o);
+    if (h !== ADMIN.passHash && o !== ADMIN.password) { toast('❌ Wrong current password!', 'err'); return; }
+
+    showLoad('Changing...');
+    try {
+        const nh = await sha256(n);
+        await db.collection(CU).doc(ADMIN.id).update({password: n, passHash: nh});
+        ADMIN.password = n;
+        ADMIN.passHash = nh;
+        localStorage.setItem('billAdmin', JSON.stringify(ADMIN));
+        toast('✅ Password changed!', 'ok');
+        document.getElementById('apO').value = '';
+        document.getElementById('apN').value = '';
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+async function changeOfficerPass() {
+    const uid = document.getElementById('opS').value;
+    const n = document.getElementById('opN').value.trim();
+    if (!uid || !n) { toast('⚠️ Select officer and enter password!', 'err'); return; }
+
+    showLoad('Changing...');
+    try {
+        const h = await sha256(n);
+        await db.collection(CU).doc(uid).update({password: n, passHash: h});
+        toast('✅ Officer password changed!', 'ok');
+        document.getElementById('opN').value = '';
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+async function saveSystemSettings() {
+    const autoSeq = document.getElementById('autoSeq').value === 'true';
+    const sessTime = parseInt(document.getElementById('sessTime').value) || 30;
+
+    showLoad('Saving...');
+    try {
+        await db.collection(CFG).doc('main').set({
+            autoSequence: autoSeq,
+            sessionTimeout: sessTime
+        }, {merge: true});
+        SETTINGS.autoSequence = autoSeq;
+        SETTINGS.sessionTimeout = sessTime;
+        toast('✅ Settings saved!', 'ok');
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+// ═══════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════
+function getExportData() {
+    const of = document.getElementById('exO').value;
+    const area = document.getElementById('exA').value;
+    const df = document.getElementById('exF').value;
+    const dt = document.getElementById('exT').value;
+
+    let data = [...ENTRIES];
+    if (of) data = data.filter(e => e.officerId === of);
+    if (area) data = data.filter(e => e.mainAreaId === area);
+    if (df) data = data.filter(e => e.timestamp && e.timestamp >= df);
+    if (dt) data = data.filter(e => e.timestamp && e.timestamp <= dt + 'T23:59:59');
+    return data;
+}
+
+function exportPDF() {
+    const data = getExportData();
+    if (!data.length) { toast('⚠️ No data!', 'err'); return; }
+
+    const {jsPDF} = window.jspdf;
+    const doc = new jsPDF({orientation: 'landscape'});
+
+    doc.setFillColor(0, 51, 102);
+    doc.rect(0, 0, 300, 30, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('WASA Bills Distribution Report', doc.internal.pageSize.width / 2, 14, {align: 'center'});
+    doc.setFontSize(9);
+    doc.text('Generated: ' + new Date().toLocaleString() + ' | Total Entries: ' + data.length, doc.internal.pageSize.width / 2, 24, {align: 'center'});
+
+    const rows = data.map((e, i) => [
+        i + 1,
+        'Day ' + (e.day || '-'),
+        e.mainAreaName || '-',
+        e.subAreaName || '-',
+        (e.totalBills || 0).toLocaleString(),
+        (e.todayDistributed || 0).toLocaleString(),
+        (e.cumulativeDistributed || 0).toLocaleString(),
+        (e.remaining || 0).toLocaleString(),
+        (e.percent || 0) + '%',
+        e.status || '-',
+        e.officerName || '-',
+        e.date || '-'
+    ]);
+
+    doc.autoTable({
+        startY: 36,
+        head: [['#', 'Day', 'Main Area', 'Sub Area', 'Total', 'Today', 'Cumul', 'Remain', '%', 'Status', 'Officer', 'Date']],
+        body: rows,
+        headStyles: {fillColor: [0, 51, 102], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7, halign: 'center'},
+        bodyStyles: {fontSize: 7, halign: 'center'},
+        alternateRowStyles: {fillColor: [245, 247, 250]},
+        margin: {left: 5, right: 5},
+        styles: {cellPadding: 2, overflow: 'linebreak'}
+    });
+
+    doc.save('WASA_Bills_Report_' + new Date().toISOString().slice(0, 10) + '.pdf');
+    toast('📄 PDF exported!', 'ok');
+}
+
+function exportCSV() {
+    const data = getExportData();
+    if (!data.length) { toast('⚠️ No data!', 'err'); return; }
+
+    const headers = ['Day', 'Main Area', 'Sub Area', 'Total Bills', 'Today Distributed', 'Cumulative', 'Remaining', '%', 'Status', 'Officer', 'Phone', 'Date', 'GPS', 'Remarks'];
+    const csv = '\uFEFF' + headers.map(h => '"' + h + '"').join(',') + '\n' +
+        data.map(e => [
+            'Day ' + (e.day || ''),
+            e.mainAreaName || '',
+            e.subAreaName || '',
+            e.totalBills || 0,
+            e.todayDistributed || 0,
+            e.cumulativeDistributed || 0,
+            e.remaining || 0,
+            (e.percent || 0) + '%',
+            e.status || '',
+            e.officerName || '',
+            e.officerPhone || '',
+            e.date || '',
+            e.gps || '',
+            (e.remarks || '').replace(/"/g, '""')
+        ].map(x => '"' + x + '"').join(',')).join('\n');
+
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'WASA_Bills_' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    toast('📊 CSV exported!', 'ok');
+}
+
+function exportWord() {
+    const data = getExportData();
+    if (!data.length) { toast('⚠️ No data!', 'err'); return; }
+
+    let h = '<html><head><meta charset="utf-8"><style>body{font-family:Arial;padding:15px;}h1{color:#003366;text-align:center;}table{width:100%;border-collapse:collapse;margin-top:15px;}th{background:#003366;color:white;padding:6px;font-size:9px;}td{border:1px solid #ddd;padding:5px;font-size:9px;}tr:nth-child(even){background:#f5f7fa;}</style></head><body>';
+    h += '<h1>WASA Bills Distribution Report</h1><p>Total: ' + data.length + ' | ' + new Date().toLocaleDateString('en-GB') + '</p>';
+    h += '<table><tr><th>Day</th><th>Main Area</th><th>Sub Area</th><th>Total</th><th>Distributed</th><th>%</th><th>Status</th><th>Officer</th><th>Date</th></tr>';
+    data.forEach(e => {
+        h += `<tr><td>Day ${e.day || '-'}</td><td>${e.mainAreaName || '-'}</td><td>${e.subAreaName || '-'}</td><td>${(e.totalBills || 0).toLocaleString()}</td><td>${(e.cumulativeDistributed || 0).toLocaleString()}</td><td>${e.percent || 0}%</td><td>${e.status || '-'}</td><td>${e.officerName || '-'}</td><td>${e.date || '-'}</td></tr>`;
+    });
+    h += '</table></body></html>';
+
+    const blob = new Blob([h], {type: 'application/msword'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'WASA_Bills_' + new Date().toISOString().slice(0, 10) + '.doc';
+    a.click();
+    toast('📝 Word exported!', 'ok');
+}
+
+function quickReport(type) {
+    document.getElementById('exO').value = '';
+    document.getElementById('exA').value = '';
+    document.getElementById('exF').value = '';
+    document.getElementById('exT').value = '';
+    if (type === 'daily') {
+        const today = new Date().toISOString().slice(0, 10);
+        document.getElementById('exF').value = today;
+        document.getElementById('exT').value = today;
+    }
+    exportPDF();
+}
+
+// ═══════════════════════════════════════════
+// BACKUP & RESTORE
+// ═══════════════════════════════════════════
+async function doBackup() {
+    showLoad('Creating backup...');
+    try {
+        const data = {
+            mainAreas: MAIN_AREAS,
+            subAreas: SUB_AREAS,
+            entries: ENTRIES,
+            users: USERS,
+            settings: SETTINGS,
+            timestamp: new Date().toISOString(),
+            version: '1.0'
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'WASA_Bills_Backup_' + new Date().toISOString().slice(0, 10) + '.json';
+        a.click();
+        toast('📥 Backup downloaded!', 'ok');
+    } catch (e) { toast('❌ ' + e.message, 'err'); }
+    hideLoad();
+}
+
+async function doRestore() {
+    const file = document.getElementById('rFile').files[0];
+    if (!file) { toast('⚠️ Select file!', 'err'); return; }
+    if (!confirm('⚠️ Restore will ADD data from backup. Continue?')) return;
+
+    showLoad('Restoring...');
+    try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        let count = 0;
+
+        if (data.mainAreas) {
+            for (let a of data.mainAreas) {
+                delete a.id;
+                await db.collection(CM).add(a);
+                count++;
+            }
+        }
+        if (data.subAreas) {
+            for (let s of data.subAreas) {
+                delete s.id;
+                await db.collection(CS).add(s);
+                count++;
+            }
+        }
+        if (data.entries) {
+            for (let e of data.entries) {
+                delete e.id;
+                await db.collection(CE).add(e);
+                count++;
+            }
+        }
+
+        toast(`✅ ${count} items restored! Reloading...`, 'ok');
+        setTimeout(() => loadAll(), 1500);
+    } catch (e) { toast('❌ Invalid: ' + e.message, 'err'); }
+    hideLoad();
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function go(page, el) {
+    document.querySelectorAll('.pg').forEach(p => p.classList.remove('act'));
+    document.querySelectorAll('.sb-link').forEach(l => l.classList.remove('act'));
+
+    const pgEl = document.getElementById('p-' + page);
+    if (pgEl) pgEl.classList.add('act');
+    if (el) el.classList.add('act');
+
+    const titles = {
+        dashboard: {t: '📊 Dashboard', s: 'Live overview of distribution progress'},
+        dailyentry: {t: '📅 Daily Entry View', s: 'All entries from all officers'},
+        areadetail: {t: '📋 Area Detail', s: 'Live status of all sub areas'},
+        sequence: {t: '⚙️ Sequence Setup', s: '10-day distribution sequence'},
+        mainareas: {t: '🏘️ Main Areas', s: 'Manage main areas'},
+        subareas: {t: '🏠 Sub Areas', s: 'Manage sub areas'},
+        users: {t: '👥 Users Management', s: 'Officers and admins'},
+        reports: {t: '📈 Reports & Analytics', s: 'Detailed insights'},
+        customize: {t: '🎨 Customize', s: 'Colors, fonts, branding'},
+        export: {t: '📤 Export Data', s: 'Download reports'},
+        backup: {t: '💾 Backup & Restore', s: 'Data safety'},
+        settings: {t: '⚙️ Settings', s: 'System configuration'}
+    };
+    if (titles[page]) {
+        document.getElementById('pgTitle').textContent = titles[page].t;
+        document.getElementById('pgSubtitle').textContent = titles[page].s;
+    }
+
+    if (page === 'dashboard') renderDashboard();
+    if (page === 'dailyentry') { renderDailyEntry(); updateAllFilters(); }
+    if (page === 'areadetail') { renderAreaDetail(); updateAllFilters(); }
+    if (page === 'sequence') renderSequence();
+    if (page === 'mainareas') renderMainAreas();
+    if (page === 'subareas') { renderSubAreas(); updateAllFilters(); }
+    if (page === 'users') renderUsers();
+    if (page === 'reports') renderReports();
+    if (page === 'export') updateAllFilters();
+    if (page === 'settings') updateAllFilters();
+
+    closeSB();
+}
+
+function toggleSB() {
+    document.getElementById('sb').classList.toggle('open');
+    document.getElementById('sov').classList.toggle('open');
+}
+
+function closeSB() {
+    document.getElementById('sb').classList.remove('open');
+    document.getElementById('sov').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════
+// VIEWER
+// ═══════════════════════════════════════════
+function openViewer(url, type) {
+    const c = document.getElementById('vwC');
+    c.innerHTML = type === 'image'
+        ? `<img src="${url}">`
+        : `<video src="${url}" controls autoplay style="max-width:90%;max-height:85vh;border-radius:8px;"></video>`;
+    document.getElementById('vw').classList.add('open');
+}
+
+function closeViewer() {
+    document.getElementById('vw').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+function toast(msg, type = '') {
+    const t = document.getElementById('tst');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => t.className = 'toast', 3000);
+}
+
+function showLoad(msg) {
+    document.getElementById('ldM').textContent = msg || 'Loading...';
+    document.getElementById('ld').classList.add('show');
+}
+
+function hideLoad() {
+    document.getElementById('ld').classList.remove('show');
+}
+</script>
+</body>
+</html>

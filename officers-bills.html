@@ -1,0 +1,2107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#003366">
+    <title>WASA Bills Distribution</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root{
+            --p:#003366;--pd:#001F3F;--pl:#E6F0FA;
+            --a:#FF6B35;--al:#FFF3ED;
+            --s:#10B981;--sl:#D1FAE5;
+            --w:#F59E0B;--wl:#FEF3C7;
+            --r:#EF4444;--rl:#FEE2E2;
+            --bg:#F5F7FA;--c:#FFF;
+            --t:#1A1A2E;--td:#6B7280;--tl:#9CA3AF;--b:#E5E7EB;
+            --sh:0 2px 8px rgba(0,0,0,0.06);
+            --shx:0 4px 15px rgba(0,0,0,0.1);
+            --br:12px;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent;}
+        body{background:var(--bg);color:var(--t);min-height:100vh;padding-bottom:75px;overflow-x:hidden;}
+
+        /* ─── SPLASH SCREEN ─── */
+        .splash{position:fixed;inset:0;background:linear-gradient(135deg,var(--p),var(--pd));z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s;}
+        .splash.hide{opacity:0;pointer-events:none;}
+        .splash-logo{width:100px;height:100px;background:#fff;border-radius:24px;display:flex;align-items:center;justify-content:center;margin-bottom:15px;box-shadow:0 15px 40px rgba(0,0,0,0.3);font-size:2.2rem;font-weight:900;color:var(--p);}
+        .splash h2{color:#fff;font-size:1.2rem;font-weight:700;}
+        .splash p{color:rgba(255,255,255,0.75);font-size:0.75rem;margin-top:5px;}
+        .splash-spin{width:32px;height:32px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-top:25px;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+
+        /* ─── LOGIN PAGE ─── */
+        .login{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--p),var(--pd));padding:20px;}
+        .login-box{background:#fff;border-radius:20px;padding:32px 25px;width:100%;max-width:390px;box-shadow:0 20px 60px rgba(0,0,0,0.2);}
+        .login-icon{width:75px;height:75px;background:var(--pl);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.8rem;font-weight:900;color:var(--p);}
+        .login-box h2{text-align:center;font-size:1.3rem;margin-bottom:3px;}
+        .login-box .sub{text-align:center;color:var(--td);font-size:0.8rem;margin-bottom:20px;}
+        .lin{width:100%;padding:13px 15px;border:2px solid var(--b);border-radius:12px;font-size:0.95rem;outline:none;margin-bottom:10px;background:var(--bg);transition:0.2s;}
+        .lin:focus{border-color:var(--p);background:#fff;box-shadow:0 0 0 3px rgba(0,51,102,0.1);}
+        .lbtn{width:100%;padding:13px;background:var(--p);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:5px;transition:0.2s;}
+        .lbtn:active{background:var(--pd);transform:scale(0.98);}
+        .lerr{color:var(--r);font-size:0.78rem;text-align:center;margin-top:8px;display:none;padding:8px;background:var(--rl);border-radius:8px;}
+        .login-note{text-align:center;color:var(--td);font-size:0.7rem;margin-top:15px;padding:10px;background:var(--bg);border-radius:8px;}
+
+        /* ─── TOP BAR ─── */
+        .topbar{position:sticky;top:0;z-index:100;background:var(--p);box-shadow:0 2px 10px rgba(0,51,102,0.3);}
+        .tb-main{display:flex;align-items:center;padding:11px 15px;gap:10px;}
+        .tb-ham{background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:5px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;}
+        .tb-ham:active{background:rgba(255,255,255,0.2);}
+        .tb-title{flex:1;}
+        .tb-title h1{font-size:1rem;color:#fff;font-weight:700;}
+        .tb-title p{font-size:0.62rem;color:rgba(255,255,255,0.75);}
+        .tb-btn{background:rgba(255,255,255,0.15);border:none;color:#fff;width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;position:relative;transition:0.15s;}
+        .tb-btn:active{background:rgba(255,255,255,0.3);transform:scale(0.95);}
+        .tb-btn .dot{position:absolute;top:5px;right:5px;width:7px;height:7px;background:var(--w);border-radius:50%;display:none;}
+        .tb-btn .dot.show{display:block;}
+
+        /* ─── STATUS BAR ─── */
+        .status-bar{background:rgba(0,0,0,0.15);padding:5px 15px;display:flex;align-items:center;justify-content:space-between;font-size:0.62rem;color:rgba(255,255,255,0.85);}
+        .ndot{width:7px;height:7px;border-radius:50%;background:var(--s);display:inline-block;margin-right:5px;box-shadow:0 0 8px var(--s);}
+        .ndot.off{background:var(--r);box-shadow:0 0 8px var(--r);}
+        .ptag{background:var(--w);color:#fff;padding:2px 8px;border-radius:10px;font-weight:700;font-size:0.55rem;display:none;}
+        .ptag.show{display:inline-block;}
+
+        /* ─── SIDEBAR ─── */
+        .sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;opacity:0;pointer-events:none;transition:opacity 0.3s;backdrop-filter:blur(2px);}
+        .sb-overlay.open{opacity:1;pointer-events:auto;}
+        .sidebar{position:fixed;top:0;left:-280px;width:280px;height:100vh;background:#fff;z-index:201;transition:left 0.3s;overflow-y:auto;box-shadow:4px 0 20px rgba(0,0,0,0.15);}
+        .sidebar.open{left:0;}
+        .sb-header{background:linear-gradient(135deg,var(--p),var(--pd));padding:25px 20px 20px;color:#fff;}
+        .sb-avatar{width:50px;height:50px;background:rgba(255,255,255,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;margin-bottom:10px;}
+        .sb-name{font-size:1rem;font-weight:700;}
+        .sb-phone{font-size:0.72rem;color:rgba(255,255,255,0.75);}
+        .sb-role{display:inline-block;background:rgba(255,255,255,0.2);padding:3px 10px;border-radius:10px;font-size:0.6rem;margin-top:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+        .sb-nav{padding:8px 0;}
+        .sb-section{padding:10px 20px 4px;font-size:0.58rem;color:var(--tl);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;}
+        .sb-link{display:flex;align-items:center;gap:12px;padding:11px 20px;cursor:pointer;font-size:0.88rem;color:var(--td);font-weight:500;border:none;background:none;width:100%;text-align:left;transition:0.15s;position:relative;}
+        .sb-link:active{background:var(--pl);color:var(--p);}
+        .sb-link.act{background:var(--pl);color:var(--p);font-weight:700;}
+        .sb-link.act::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--p);}
+        .sb-link .ic{font-size:1.15rem;width:24px;text-align:center;}
+        .sb-link .badge{margin-left:auto;background:var(--r);color:#fff;font-size:0.55rem;padding:2px 7px;border-radius:10px;font-weight:700;min-width:20px;text-align:center;}
+        .sb-divider{height:1px;background:var(--b);margin:8px 20px;}
+        .sb-link.danger{color:var(--r);}
+
+        /* ─── BOTTOM NAV ─── */
+        .bnav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#fff;display:flex;border-top:1px solid var(--b);padding:5px 0;padding-bottom:max(5px,env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(0,0,0,0.05);}
+        .bn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;cursor:pointer;border:none;background:none;transition:0.15s;position:relative;}
+        .bn .bi{font-size:1.2rem;transition:0.15s;}
+        .bn .bl{font-size:0.58rem;color:var(--td);font-weight:500;}
+        .bn.act .bi{transform:scale(1.15);}
+        .bn.act .bl{color:var(--p);font-weight:700;}
+        .bn .badge{position:absolute;top:3px;right:22%;background:var(--r);color:#fff;font-size:0.48rem;padding:1px 5px;border-radius:8px;font-weight:700;min-width:16px;text-align:center;display:none;}
+        .bn .badge.show{display:inline-block;}
+
+        /* ─── PAGES ─── */
+        .page{display:none;padding:15px;animation:slideUp 0.3s;}
+        .page.active{display:block;}
+        @keyframes slideUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+        /* ─── ACTIVE AREA BANNER ─── */
+        .active-banner{background:linear-gradient(135deg,var(--p),var(--pd));color:#fff;border-radius:var(--br);padding:16px;margin-bottom:14px;position:relative;overflow:hidden;}
+        .active-banner::before{content:'';position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(255,255,255,0.1);border-radius:50%;}
+        .ab-day{font-size:0.65rem;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;position:relative;}
+        .ab-area{font-size:1.15rem;font-weight:800;margin-bottom:8px;position:relative;}
+        .ab-subs{font-size:0.7rem;color:rgba(255,255,255,0.85);margin-bottom:10px;position:relative;}
+        .ab-progress{height:8px;background:rgba(255,255,255,0.2);border-radius:10px;overflow:hidden;position:relative;}
+        .ab-bar{height:100%;background:linear-gradient(90deg,var(--a),#FFB088);border-radius:10px;transition:width 0.6s;position:relative;}
+        .ab-percent{position:absolute;right:0;top:-22px;font-size:0.75rem;font-weight:700;color:#fff;}
+
+        /* ─── STATS GRID ─── */
+        .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
+        .stat-card{background:#fff;border-radius:var(--br);padding:12px 8px;text-align:center;box-shadow:var(--sh);border:1px solid var(--b);}
+        .stat-num{font-size:1.4rem;font-weight:800;line-height:1;}
+        .stat-lbl{font-size:0.55rem;color:var(--td);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px;font-weight:600;}
+        .c-p{color:var(--p);}
+        .c-s{color:var(--s);}
+        .c-a{color:var(--a);}
+        .c-w{color:var(--w);}
+
+        /* ─── CARDS ─── */
+        .card{background:#fff;border:1px solid var(--b);border-radius:var(--br);padding:15px;margin-bottom:12px;box-shadow:var(--sh);}
+        .card-title{font-size:0.92rem;color:var(--p);margin-bottom:10px;display:flex;align-items:center;gap:7px;font-weight:700;}
+        .card-title .icon{font-size:1.1rem;}
+
+        /* ─── FORM ─── */
+        .form-group{margin-bottom:12px;}
+        .form-group label{display:flex;align-items:center;gap:5px;font-size:0.7rem;color:var(--td);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;font-weight:600;}
+        .form-group label .req{color:var(--r);}
+        .form-group input,.form-group select,.form-group textarea{
+            width:100%;background:var(--bg);border:2px solid var(--b);border-radius:10px;
+            padding:11px 13px;color:var(--t);font-size:0.9rem;outline:none;transition:0.2s;
+        }
+        .form-group textarea{min-height:70px;resize:vertical;}
+        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--p);background:#fff;box-shadow:0 0 0 3px rgba(0,51,102,0.08);}
+        .form-group input:disabled{background:#EEE;color:var(--td);cursor:not-allowed;}
+        .form-group select{cursor:pointer;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:35px;}
+        .form-group .hint{font-size:0.62rem;color:var(--tl);margin-top:3px;}
+        .info-box{background:var(--pl);border:1px solid var(--p);border-radius:10px;padding:10px;margin-bottom:12px;}
+        .info-box .il{font-size:0.65rem;color:var(--td);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
+        .info-box .iv{font-size:1rem;font-weight:700;color:var(--p);margin-top:2px;}
+
+        /* ─── AUTO CALC BOX ─── */
+        .calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+        .calc-box{background:linear-gradient(135deg,var(--pl),#F0F7FF);border:1px solid var(--b);border-radius:10px;padding:10px;text-align:center;}
+        .calc-lbl{font-size:0.58rem;color:var(--td);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
+        .calc-val{font-size:1.1rem;font-weight:800;color:var(--p);margin-top:3px;}
+        .calc-box.warn{background:linear-gradient(135deg,var(--wl),#FEF9E6);}
+        .calc-box.warn .calc-val{color:var(--w);}
+        .calc-box.success{background:linear-gradient(135deg,var(--sl),#E8FBF0);}
+        .calc-box.success .calc-val{color:var(--s);}
+
+        /* ─── MEDIA CAPTURE ─── */
+        .media-sec{margin-bottom:12px;}
+        .media-lbl{font-size:0.7rem;color:var(--td);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:600;}
+        .capture-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+        .capture-btn{position:relative;overflow:hidden;padding:14px 8px;border:2px dashed var(--b);border-radius:10px;background:var(--bg);cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;transition:0.15s;}
+        .capture-btn:active{border-color:var(--p);background:var(--pl);}
+        .capture-btn .c-icon{font-size:1.4rem;}
+        .capture-btn .c-text{font-size:0.65rem;color:var(--td);font-weight:600;}
+        .capture-btn input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+        .media-preview{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+        .media-thumb{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;background:var(--bg);border:1px solid var(--b);}
+        .media-thumb img,.media-thumb video{width:100%;height:100%;object-fit:cover;cursor:pointer;}
+        .media-thumb .rm{position:absolute;top:3px;right:3px;width:20px;height:20px;background:var(--r);color:#fff;border:none;border-radius:50%;font-size:0.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+        /* ─── BUTTONS ─── */
+        .btn{width:100%;padding:13px;border:none;border-radius:var(--br);font-size:0.95rem;font-weight:700;cursor:pointer;transition:0.15s;display:flex;align-items:center;justify-content:center;gap:7px;}
+        .btn:active{transform:scale(0.97);}
+        .btn-p{background:var(--p);color:#fff;}
+        .btn-p:active{background:var(--pd);}
+        .btn-a{background:var(--a);color:#fff;}
+        .btn-s{background:var(--s);color:#fff;}
+        .btn-w{background:var(--w);color:#fff;}
+        .btn-r{background:var(--r);color:#fff;margin-top:8px;}
+        .btn-o{background:transparent;color:var(--p);border:2px solid var(--p);}
+        .btn-sm{width:auto;padding:7px 14px;font-size:0.75rem;border-radius:8px;display:inline-flex;}
+
+        /* ─── ENTRY CARDS ─── */
+        .entry-card{background:#fff;border:1px solid var(--b);border-radius:var(--br);padding:12px;margin-bottom:10px;box-shadow:var(--sh);position:relative;overflow:hidden;}
+        .entry-card.pending{border-left:4px solid var(--w);background:linear-gradient(90deg,var(--wl) 0%,#fff 20%);}
+        .entry-card.uploading{border-left:4px solid var(--p);background:linear-gradient(90deg,var(--pl) 0%,#fff 20%);}
+        .entry-card.failed{border-left:4px solid var(--r);background:linear-gradient(90deg,var(--rl) 0%,#fff 20%);}
+        .entry-card.synced{border-left:4px solid var(--s);}
+        .ec-status{position:absolute;top:8px;right:8px;padding:3px 8px;border-radius:10px;font-size:0.55rem;font-weight:700;text-transform:uppercase;color:#fff;}
+        .ec-status.pending{background:var(--w);}
+        .ec-status.uploading{background:var(--p);}
+        .ec-status.failed{background:var(--r);}
+        .ec-status.synced{background:var(--s);}
+        .ec-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-right:70px;}
+        .ec-num{background:var(--p);color:#fff;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;flex-shrink:0;}
+        .ec-info{flex:1;}
+        .ec-name{font-size:0.88rem;font-weight:700;}
+        .ec-area{font-size:0.62rem;color:var(--td);}
+        .ec-details{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-bottom:8px;}
+        .ec-row{display:flex;justify-content:space-between;padding:2px 0;}
+        .ec-lbl{font-size:0.6rem;color:var(--td);font-weight:600;}
+        .ec-val{font-size:0.72rem;font-weight:700;}
+        .ec-progress{height:6px;background:var(--b);border-radius:5px;overflow:hidden;margin-top:6px;}
+        .ec-bar{height:100%;background:linear-gradient(90deg,var(--p),var(--a));border-radius:5px;transition:width 0.5s;}
+        .ec-photos{display:flex;gap:4px;margin-top:8px;overflow-x:auto;padding-bottom:3px;}
+        .ec-photos img,.ec-photos video{width:45px;height:45px;object-fit:cover;border-radius:6px;border:1px solid var(--b);flex-shrink:0;cursor:pointer;}
+        .ec-actions{display:flex;gap:5px;margin-top:8px;}
+        .ec-gps{font-size:0.6rem;color:var(--p);margin-top:4px;font-weight:600;}
+        .ec-remarks{font-size:0.65rem;color:var(--td);margin-top:4px;font-style:italic;padding:5px;background:var(--bg);border-radius:6px;}
+
+        /* ─── SYNC BANNER ─── */
+        .sync-btn{padding:10px;border-radius:10px;margin-bottom:12px;display:none;align-items:center;gap:8px;font-size:0.8rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--wl),#FEF9E6);color:#92400E;border:1px solid var(--w);width:100%;transition:0.15s;}
+        .sync-btn.show{display:flex;}
+        .sync-btn:active{transform:scale(0.98);}
+
+        /* ─── SEARCH ─── */
+        .search-box{width:100%;padding:10px 13px;border:2px solid var(--b);border-radius:10px;font-size:0.85rem;outline:none;background:#fff;margin-bottom:10px;}
+        .search-box:focus{border-color:var(--p);}
+
+        /* ─── FILTER TABS ─── */
+        .filter-tabs{display:flex;gap:5px;margin-bottom:10px;overflow-x:auto;padding-bottom:3px;}
+        .ftab{padding:6px 12px;border:1px solid var(--b);border-radius:18px;background:#fff;color:var(--td);font-size:0.68rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:0.15s;}
+        .ftab.act{background:var(--p);color:#fff;border-color:var(--p);}
+
+        /* ─── PROFILE ─── */
+        .profile-card{text-align:center;padding:18px 0;}
+        .prof-av{width:65px;height:65px;background:var(--pl);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:1.6rem;font-weight:800;color:var(--p);}
+        .prof-name{font-size:1rem;font-weight:700;}
+        .prof-phone{font-size:0.8rem;color:var(--td);}
+        .prof-stats{display:flex;justify-content:center;gap:22px;margin-top:12px;}
+        .pstat{text-align:center;}
+        .pstat-n{font-size:1.15rem;font-weight:800;color:var(--p);}
+        .pstat-l{font-size:0.55rem;color:var(--td);text-transform:uppercase;letter-spacing:0.5px;}
+        .info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--b);}
+        .info-row:last-child{border-bottom:none;}
+        .info-row .il{font-size:0.78rem;color:var(--td);}
+        .info-row .iv{font-size:0.78rem;font-weight:700;}
+
+        /* ─── CHART CONTAINER ─── */
+        .chart-container{position:relative;height:220px;margin:10px 0;}
+        .chart-title{font-size:0.85rem;font-weight:700;color:var(--p);margin-bottom:8px;text-align:center;}
+
+        /* ─── AREA LIST ─── */
+        .area-item{background:#fff;border:1px solid var(--b);border-radius:10px;padding:12px;margin-bottom:8px;box-shadow:var(--sh);cursor:pointer;transition:0.15s;}
+        .area-item:active{transform:scale(0.98);background:var(--bg);}
+        .area-item.completed{border-left:3px solid var(--s);}
+        .area-item.active-area{border-left:3px solid var(--p);background:var(--pl);}
+        .area-item.pending{border-left:3px solid var(--tl);}
+        .area-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+        .area-day{background:var(--p);color:#fff;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;}
+        .area-name{flex:1;margin-left:10px;font-weight:700;font-size:0.9rem;}
+        .area-badge{font-size:0.55rem;padding:3px 8px;border-radius:8px;font-weight:700;text-transform:uppercase;}
+        .area-badge.active{background:var(--p);color:#fff;}
+        .area-badge.completed{background:var(--s);color:#fff;}
+        .area-badge.pending{background:var(--tl);color:#fff;}
+        .area-details{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;font-size:0.65rem;}
+        .area-detail{background:var(--bg);border-radius:6px;padding:5px;text-align:center;}
+        .area-detail-l{color:var(--td);font-size:0.55rem;text-transform:uppercase;}
+        .area-detail-v{font-weight:700;font-size:0.8rem;margin-top:2px;}
+        .area-progress{margin-top:8px;}
+        .area-prog-bar{height:5px;background:var(--b);border-radius:4px;overflow:hidden;}
+        .area-prog-fill{height:100%;background:linear-gradient(90deg,var(--p),var(--a));border-radius:4px;transition:width 0.5s;}
+        .area-percent{text-align:right;font-size:0.62rem;font-weight:700;color:var(--p);margin-top:3px;}
+
+        /* ─── MODAL ─── */
+        .modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:250;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px);}
+        .modal.open{display:flex;}
+        .modal-content{background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;animation:slideUpModal 0.3s;}
+        @keyframes slideUpModal{from{transform:translateY(100%);}to{transform:translateY(0);}}
+        .modal-handle{width:40px;height:4px;background:var(--b);border-radius:5px;margin:0 auto 15px;}
+        .modal-title{font-size:1rem;font-weight:700;color:var(--p);margin-bottom:15px;text-align:center;}
+
+        /* ─── VIEWER ─── */
+        .viewer{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:400;display:none;align-items:center;justify-content:center;flex-direction:column;}
+        .viewer.open{display:flex;}
+        .viewer img,.viewer video{max-width:95%;max-height:80vh;border-radius:8px;}
+        .viewer-close{position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+        /* ─── LOADING ─── */
+        .loading{position:fixed;inset:0;background:rgba(255,255,255,0.92);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+        .loading.show{display:flex;}
+        .loading-spin{width:38px;height:38px;border:3px solid var(--b);border-top-color:var(--p);border-radius:50%;animation:spin 0.7s linear infinite;}
+        .loading-msg{font-size:0.85rem;color:var(--td);font-weight:600;}
+
+        /* ─── TOAST ─── */
+        .toast{position:fixed;bottom:85px;left:50%;transform:translateX(-50%);background:var(--t);color:#fff;padding:11px 20px;border-radius:10px;font-size:0.78rem;font-weight:600;opacity:0;transition:0.3s;z-index:600;max-width:90%;text-align:center;pointer-events:none;box-shadow:0 5px 20px rgba(0,0,0,0.15);}
+        .toast.show{opacity:1;}
+        .toast.err{background:var(--r);}
+        .toast.ok{background:var(--s);}
+        .toast.warn{background:var(--w);}
+
+        /* ─── EMPTY STATE ─── */
+        .empty{text-align:center;padding:35px 15px;}
+        .empty .ei{font-size:2.5rem;margin-bottom:6px;}
+        .empty p{color:var(--td);font-size:0.82rem;}
+
+        /* ─── NETWORK BANNER ─── */
+        .nbanner{position:fixed;top:0;left:0;right:0;z-index:300;padding:8px;text-align:center;font-size:0.72rem;font-weight:700;color:#fff;transform:translateY(-100%);transition:transform 0.3s;}
+        .nbanner.show{transform:translateY(0);}
+        .nbanner.offline{background:var(--r);}
+        .nbanner.online{background:var(--s);}
+
+        /* ─── DESKTOP ADJUST ─── */
+        @media(min-width:500px){
+            body{max-width:480px;margin:0 auto;box-shadow:0 0 30px rgba(0,0,0,0.1);}
+            .bnav{max-width:480px;left:50%;transform:translateX(-50%);}
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══ SPLASH SCREEN ═══ -->
+<div class="splash" id="splash">
+    <div class="splash-logo">💧</div>
+    <h2>WASA Bills Tracker</h2>
+    <p>Distribution Management System</p>
+    <div class="splash-spin"></div>
+</div>
+
+<!-- ═══ LOGIN PAGE ═══ -->
+<div class="login" id="loginPage">
+    <div class="login-box">
+        <div class="login-icon">💧</div>
+        <h2>WASA Bills</h2>
+        <p class="sub">Field Officer Login</p>
+        <input class="lin" type="tel" id="lPhone" placeholder="📞 Phone Number" maxlength="15">
+        <input class="lin" type="password" id="lPass" placeholder="🔒 Password">
+        <button class="lbtn" onclick="doLogin()">Login →</button>
+        <p class="lerr" id="lErr"></p>
+        <p class="login-note">💡 First login online karein, phir offline bhi kaam karega</p>
+    </div>
+</div>
+
+<!-- ═══ MAIN APP ═══ -->
+<div id="mainApp" style="display:none;">
+
+    <!-- NETWORK BANNER -->
+    <div class="nbanner" id="nBanner"></div>
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <div class="tb-main">
+            <button class="tb-ham" onclick="toggleSidebar()">☰</button>
+            <div class="tb-title">
+                <h1 id="appTitle">WASA Bills Tracker</h1>
+                <p id="appSubtitle">Distribution System</p>
+            </div>
+            <button class="tb-btn" onclick="manualSync()" title="Sync Now">
+                🔄<span class="dot" id="syncDot"></span>
+            </button>
+        </div>
+        <div class="status-bar">
+            <span><span class="ndot" id="nDot"></span><span id="nLabel">Online</span></span>
+            <span class="ptag" id="pTag">0 Pending</span>
+        </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sb-overlay" id="sbOverlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sb-header">
+            <div class="sb-avatar" id="sbAvatar">O</div>
+            <div class="sb-name" id="sbName">Officer</div>
+            <div class="sb-phone" id="sbPhone">--</div>
+            <div class="sb-role" id="sbRole">Field Officer</div>
+        </div>
+        <div class="sb-nav">
+            <div class="sb-section">Main</div>
+            <button class="sb-link act" onclick="goPage('home',this)">
+                <span class="ic">🏠</span>Dashboard
+            </button>
+            <button class="sb-link" onclick="goPage('entry',this)">
+                <span class="ic">➕</span>Daily Entry
+            </button>
+            <button class="sb-link" onclick="goPage('progress',this)">
+                <span class="ic">📊</span>My Progress
+            </button>
+            <button class="sb-link" onclick="goPage('areas',this)">
+                <span class="ic">🏘️</span>All Areas
+            </button>
+            <div class="sb-divider"></div>
+            <div class="sb-section">Data</div>
+            <button class="sb-link" onclick="goPage('history',this)">
+                <span class="ic">📁</span>My History
+                <span class="badge" id="hBadge" style="display:none">0</span>
+            </button>
+            <div class="sb-divider"></div>
+            <div class="sb-section">Account</div>
+            <button class="sb-link" onclick="goPage('profile',this)">
+                <span class="ic">👤</span>Profile
+            </button>
+            <div class="sb-divider"></div>
+            <button class="sb-link danger" onclick="doLogout()">
+                <span class="ic">🚪</span>Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══ PAGE: DASHBOARD ═══ -->
+    <div class="page active" id="pg-home">
+        <!-- ACTIVE AREA BANNER -->
+        <div class="active-banner" id="activeBanner">
+            <div class="ab-day" id="abDay">DAY 1</div>
+            <div class="ab-area" id="abArea">Loading...</div>
+            <div class="ab-subs" id="abSubs">--</div>
+            <div class="ab-progress">
+                <div class="ab-bar" id="abBar" style="width:0%">
+                    <span class="ab-percent" id="abPercent">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-num c-p" id="sTotal">0</div>
+                <div class="stat-lbl">Total Bills</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num c-s" id="sDist">0</div>
+                <div class="stat-lbl">Distributed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num c-a" id="sRemain">0</div>
+                <div class="stat-lbl">Remaining</div>
+            </div>
+        </div>
+
+        <!-- SYNC BANNER -->
+        <button class="sync-btn" id="syncBtn" onclick="manualSync()">
+            📤 <span id="syncTx">Upload Pending Entries</span>
+        </button>
+
+        <!-- QUICK ACTION -->
+        <button class="btn btn-p" onclick="goPage('entry')" style="margin-bottom:14px;">
+            ➕ Add New Entry
+        </button>
+
+        <!-- TODAY'S ENTRIES -->
+        <div class="card-title">
+            <span class="icon">📋</span>Today's Entries
+        </div>
+        <div id="todayList"></div>
+    </div>
+
+    <!-- ═══ PAGE: DAILY ENTRY ═══ -->
+    <div class="page" id="pg-entry">
+        <div class="card">
+            <div class="card-title"><span class="icon">📝</span>New Daily Entry</div>
+
+            <!-- ACTIVE AREA INFO -->
+            <div class="info-box">
+                <div class="il">📅 Active Day</div>
+                <div class="iv" id="entryDay">Day 1</div>
+            </div>
+            <div class="info-box">
+                <div class="il">🏘️ Main Area</div>
+                <div class="iv" id="entryArea">Loading...</div>
+            </div>
+
+            <!-- SUB AREA -->
+            <div class="form-group">
+                <label>🏠 Sub Area <span class="req">*</span></label>
+                <select id="fSubArea" onchange="onSubAreaChange()">
+                    <option value="">-- Select Sub Area --</option>
+                </select>
+            </div>
+
+            <!-- TOTAL BILLS -->
+            <div class="form-group">
+                <label>📋 Total Bills <span class="req">*</span></label>
+                <input type="number" id="fTotal" min="0" placeholder="Enter total bills" inputmode="numeric">
+                <div class="hint" id="fTotalHint">Enter once for this sub area</div>
+            </div>
+
+            <!-- TODAY DISTRIBUTED -->
+            <div class="form-group">
+                <label>✅ Today's Distributed <span class="req">*</span></label>
+                <input type="number" id="fToday" min="0" placeholder="Bills distributed today" inputmode="numeric" oninput="calculatePreview()">
+            </div>
+
+            <!-- AUTO CALCULATIONS -->
+            <div class="calc-grid" id="calcBox" style="display:none;">
+                <div class="calc-box">
+                    <div class="calc-lbl">Cumulative</div>
+                    <div class="calc-val" id="calcCumul">0</div>
+                </div>
+                <div class="calc-box warn">
+                    <div class="calc-lbl">Remaining</div>
+                    <div class="calc-val" id="calcRemain">0</div>
+                </div>
+                <div class="calc-box success" style="grid-column:1/-1;">
+                    <div class="calc-lbl">Progress</div>
+                    <div class="calc-val" id="calcPercent">0%</div>
+                </div>
+            </div>
+
+            <!-- STATUS -->
+            <div class="form-group">
+                <label>📊 Status (Auto)</label>
+                <input type="text" id="fStatus" value="Not Started" disabled>
+            </div>
+
+            <!-- GPS -->
+            <div class="form-group">
+                <label>📍 GPS Location (Auto)</label>
+                <input type="text" id="fGPS" placeholder="Getting location..." readonly onclick="getGPS()">
+            </div>
+
+            <!-- REMARKS -->
+            <div class="form-group">
+                <label>💬 Remarks (Optional)</label>
+                <textarea id="fRemarks" placeholder="Any notes about this entry..."></textarea>
+            </div>
+
+            <!-- MEDIA -->
+            <div class="media-sec">
+                <div class="media-lbl">📸 Photos / Videos (Optional)</div>
+                <div class="capture-grid">
+                    <label class="capture-btn">
+                        <span class="c-icon">📷</span>
+                        <span class="c-text">Take Photo</span>
+                        <input type="file" accept="image/*" capture="environment" onchange="addFile(event,'image')">
+                    </label>
+                    <label class="capture-btn">
+                        <span class="c-icon">🎥</span>
+                        <span class="c-text">Record Video</span>
+                        <input type="file" accept="video/*" capture="environment" onchange="addFile(event,'video')">
+                    </label>
+                </div>
+                <div class="media-preview" id="mediaPreview"></div>
+            </div>
+
+            <button class="btn btn-p" onclick="submitEntry()">
+                💾 Save Entry
+            </button>
+            <p style="text-align:center;color:var(--tl);font-size:0.6rem;margin-top:6px;">
+                💡 Offline mein bhi save hoga, internet aane pe auto-upload
+            </p>
+        </div>
+    </div>
+
+    <!-- ═══ PAGE: MY PROGRESS ═══ -->
+    <div class="page" id="pg-progress">
+        <div class="card">
+            <div class="card-title"><span class="icon">📊</span>My Overall Progress</div>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-num c-p" id="pgTotal">0</div>
+                    <div class="stat-lbl">Total Entries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num c-s" id="pgDone">0</div>
+                    <div class="stat-lbl">Areas Done</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num c-a" id="pgToday">0</div>
+                    <div class="stat-lbl">Today</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="chart-title">📊 Weekly Progress</div>
+            <div class="chart-container">
+                <canvas id="chartWeekly"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="chart-title">🥧 Status Distribution</div>
+            <div class="chart-container">
+                <canvas id="chartStatus"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="chart-title">📈 Area-wise Distribution</div>
+            <div class="chart-container">
+                <canvas id="chartArea"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ PAGE: ALL AREAS ═══ -->
+    <div class="page" id="pg-areas">
+        <div class="card">
+            <div class="card-title"><span class="icon">🏘️</span>10-Day Sequence</div>
+            <p style="color:var(--td);font-size:0.72rem;margin-bottom:12px;">
+                Complete each area to unlock the next day
+            </p>
+            <div id="areasList"></div>
+        </div>
+    </div>
+
+    <!-- ═══ PAGE: HISTORY ═══ -->
+    <div class="page" id="pg-history">
+        <div class="filter-tabs">
+            <button class="ftab act" onclick="setFilter('all',this)">All</button>
+            <button class="ftab" onclick="setFilter('synced',this)">✅ Synced</button>
+            <button class="ftab" onclick="setFilter('pending',this)">⏳ Pending</button>
+            <button class="ftab" onclick="setFilter('failed',this)">❌ Failed</button>
+        </div>
+        <input class="search-box" type="text" id="hSearch" placeholder="🔍 Search entries..." oninput="renderHistory()">
+        <div id="historyList"></div>
+    </div>
+
+    <!-- ═══ PAGE: PROFILE ═══ -->
+    <div class="page" id="pg-profile">
+        <div class="card">
+            <div class="profile-card">
+                <div class="prof-av" id="profAv">O</div>
+                <div class="prof-name" id="profName">Officer</div>
+                <div class="prof-phone" id="profPhone">--</div>
+                <div class="prof-stats">
+                    <div class="pstat">
+                        <div class="pstat-n" id="prTotal">0</div>
+                        <div class="pstat-l">Total</div>
+                    </div>
+                    <div class="pstat">
+                        <div class="pstat-n" id="prToday">0</div>
+                        <div class="pstat-l">Today</div>
+                    </div>
+                    <div class="pstat">
+                        <div class="pstat-n" id="prPend">0</div>
+                        <div class="pstat-l">Pending</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title"><span class="icon">📊</span>Information</div>
+            <div class="info-row"><span class="il">📶 Network</span><span class="iv" id="prNet">Online</span></div>
+            <div class="info-row"><span class="il">💾 Pending Uploads</span><span class="iv" id="prPI">0</span></div>
+            <div class="info-row"><span class="il">✅ Uploaded</span><span class="iv" id="prUp">0</span></div>
+            <div class="info-row"><span class="il">🏘️ Assigned Areas</span><span class="iv" id="prAreas">All</span></div>
+            <div class="info-row"><span class="il">📅 Active Day</span><span class="iv" id="prDay">1</span></div>
+        </div>
+        <button class="btn btn-w" onclick="manualSync()">🔄 Sync Now</button>
+        <button class="btn btn-r" onclick="doLogout()">🚪 Logout</button>
+    </div>
+
+    <!-- ═══ BOTTOM NAV ═══ -->
+    <div class="bnav">
+        <button class="bn act" onclick="goPage('home')" id="nb-home">
+            <span class="bi">🏠</span><span class="bl">Home</span>
+        </button>
+        <button class="bn" onclick="goPage('entry')" id="nb-entry">
+            <span class="bi">➕</span><span class="bl">Entry</span>
+        </button>
+        <button class="bn" onclick="goPage('progress')" id="nb-progress">
+            <span class="bi">📊</span><span class="bl">Progress</span>
+        </button>
+        <button class="bn" onclick="goPage('history')" id="nb-history">
+            <span class="bi">📁</span><span class="bl">History</span>
+            <span class="badge" id="dBadge">0</span>
+        </button>
+        <button class="bn" onclick="goPage('profile')" id="nb-profile">
+            <span class="bi">👤</span><span class="bl">Profile</span>
+        </button>
+    </div>
+</div>
+
+<!-- ═══ VIEWER ═══ -->
+<div class="viewer" id="viewer">
+    <button class="viewer-close" onclick="closeViewer()">✕</button>
+    <div id="viewerContent"></div>
+</div>
+
+<!-- ═══ LOADING ═══ -->
+<div class="loading" id="loading">
+    <div class="loading-spin"></div>
+    <div class="loading-msg" id="ldMsg">Loading...</div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast"></div><!-- ═══ FIREBASE SDK ═══ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ═══════════════════════════════════════════
+// FIREBASE CONFIG
+// ═══════════════════════════════════════════
+firebase.initializeApp({
+    apiKey:"AIzaSyC6-JqJHut8FbFhA5_wLVdFUt1rpuT9HME",
+    authDomain:"data-center-wasa.firebaseapp.com",
+    projectId:"data-center-wasa",
+    storageBucket:"data-center-wasa.firebasestorage.app",
+    messagingSenderId:"78737102659",
+    appId:"1:78737102659:web:33a484a19872087ac2c1f6"
+});
+const db = firebase.firestore();
+db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+
+// Cloudinary
+const CLD = 'pfnarf4c';
+const PRE = 'Survey Uploads';
+
+// Collections (different from other apps)
+const CU = 'billUsers';
+const CM = 'mainAreas';
+const CS = 'subAreas';
+const CE = 'dailyEntries';
+const CFG = 'billSettings';
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let USER = null;
+let ONLINE = navigator.onLine;
+let SYNCING = false;
+let SESSION_T = null;
+const SESSION_TIMEOUT = 30 * 60 * 1000;
+
+let MAIN_AREAS = [];
+let SUB_AREAS = [];
+let MY_ENTRIES = [];
+let ACTIVE_AREA = null;
+let ACTIVE_DAY = 1;
+let SETTINGS = {};
+
+let MEDIA_FILES = [];
+let CURRENT_FILTER = 'all';
+let CHARTS = {};
+
+// ═══════════════════════════════════════════
+// SHA-256 HASH
+// ═══════════════════════════════════════════
+async function sha256(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ═══════════════════════════════════════════
+// INDEXEDDB SETUP
+// ═══════════════════════════════════════════
+let idb = null;
+
+function initIDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open('WASA_BILLS_DB', 1);
+        req.onerror = () => reject(req.error);
+        req.onsuccess = () => { idb = req.result; resolve(); };
+        req.onupgradeneeded = (e) => {
+            const d = e.target.result;
+            if (!d.objectStoreNames.contains('pending')) d.createObjectStore('pending', {keyPath: 'lid'});
+            if (!d.objectStoreNames.contains('synced')) d.createObjectStore('synced', {keyPath: 'id'});
+            if (!d.objectStoreNames.contains('cache')) d.createObjectStore('cache', {keyPath: 'key'});
+        };
+    });
+}
+
+function idbPut(store, data) {
+    return new Promise((resolve, reject) => {
+        const tx = idb.transaction(store, 'readwrite').objectStore(store).put(data);
+        tx.onsuccess = () => resolve();
+        tx.onerror = () => reject(tx.error);
+    });
+}
+
+function idbGet(store, key) {
+    return new Promise((resolve, reject) => {
+        const tx = idb.transaction(store, 'readonly').objectStore(store).get(key);
+        tx.onsuccess = () => resolve(tx.result);
+        tx.onerror = () => reject(tx.error);
+    });
+}
+
+function idbAll(store) {
+    return new Promise((resolve, reject) => {
+        const tx = idb.transaction(store, 'readonly').objectStore(store).getAll();
+        tx.onsuccess = () => resolve(tx.result || []);
+        tx.onerror = () => reject(tx.error);
+    });
+}
+
+function idbDel(store, key) {
+    return new Promise((resolve, reject) => {
+        const tx = idb.transaction(store, 'readwrite').objectStore(store).delete(key);
+        tx.onsuccess = () => resolve();
+        tx.onerror = () => reject(tx.error);
+    });
+}
+
+// ═══════════════════════════════════════════
+// NETWORK MONITORING
+// ═══════════════════════════════════════════
+window.addEventListener('online', () => {
+    ONLINE = true;
+    updateNetworkUI();
+    showBanner('✅ Internet connected! Auto-syncing...', 'online');
+    setTimeout(() => autoSync(), 2000);
+});
+
+window.addEventListener('offline', () => {
+    ONLINE = false;
+    updateNetworkUI();
+    showBanner('⚠️ Offline mode - Data will save locally', 'offline');
+});
+
+function updateNetworkUI() {
+    const dot = document.getElementById('nDot');
+    const lbl = document.getElementById('nLabel');
+    const prNet = document.getElementById('prNet');
+    if (dot) dot.classList.toggle('off', !ONLINE);
+    if (lbl) lbl.textContent = ONLINE ? 'Online' : 'Offline';
+    if (prNet) {
+        prNet.textContent = ONLINE ? '🟢 Online' : '🔴 Offline';
+        prNet.style.color = ONLINE ? 'var(--s)' : 'var(--r)';
+    }
+}
+
+function showBanner(msg, cls) {
+    const b = document.getElementById('nBanner');
+    b.textContent = msg;
+    b.className = 'nbanner show ' + cls;
+    setTimeout(() => b.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════════
+// SESSION MANAGEMENT
+// ═══════════════════════════════════════════
+function resetSession() {
+    clearTimeout(SESSION_T);
+    SESSION_T = setTimeout(() => {
+        if (USER) {
+            toast('⏰ Session expired! Please re-login.', 'err');
+            forceLogout();
+        }
+    }, SESSION_TIMEOUT);
+}
+
+document.addEventListener('click', resetSession);
+document.addEventListener('touchstart', resetSession);
+document.addEventListener('keydown', resetSession);
+
+function forceLogout() {
+    USER = null;
+    localStorage.removeItem('billOfficer');
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
+    clearTimeout(SESSION_T);
+}
+
+// ═══════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════
+window.onload = async function() {
+    try {
+        await initIDB();
+    } catch (e) {
+        console.log('IDB init failed:', e);
+    }
+
+    setTimeout(() => {
+        document.getElementById('splash').classList.add('hide');
+        checkAuth();
+    }, 1500);
+};
+
+function checkAuth() {
+    const saved = localStorage.getItem('billOfficer');
+    if (saved) {
+        USER = JSON.parse(saved);
+        showApp();
+        if (ONLINE) verifyUser();
+    } else {
+        showLoginPage();
+    }
+}
+
+async function verifyUser() {
+    try {
+        const doc = await db.collection(CU).doc(USER.id).get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.status === 'disabled') {
+                toast('⛔ Account disabled by admin!', 'err');
+                forceLogout();
+                return;
+            }
+            USER = {id: doc.id, ...data};
+            localStorage.setItem('billOfficer', JSON.stringify(USER));
+        }
+    } catch (e) {}
+}
+
+function showLoginPage() {
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
+}
+
+async function showApp() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    updateNetworkUI();
+    updateSidebar();
+    updateProfile();
+    resetSession();
+
+    await loadSettings();
+    await loadMainAreas();
+    await loadSubAreas();
+    await loadMyEntries();
+
+    updateActiveArea();
+    renderDashboard();
+
+    // Auto-sync every 60 seconds
+    setInterval(() => {
+        if (ONLINE && !SYNCING) autoSync();
+    }, 60000);
+
+    // Refresh data every 30 seconds
+    setInterval(async () => {
+        if (ONLINE) {
+            await loadMainAreas();
+            await loadSubAreas();
+            await loadMyEntries();
+            const activePage = document.querySelector('.page.active');
+            if (activePage) {
+                const pageId = activePage.id;
+                if (pageId === 'pg-home') renderDashboard();
+                if (pageId === 'pg-areas') renderAreas();
+                if (pageId === 'pg-history') renderHistory();
+                if (pageId === 'pg-progress') renderProgress();
+            }
+        }
+    }, 30000);
+}
+
+// ═══════════════════════════════════════════
+// LOGIN / LOGOUT
+// ═══════════════════════════════════════════
+async function doLogin() {
+    const phone = document.getElementById('lPhone').value.trim();
+    const pass = document.getElementById('lPass').value.trim();
+    const err = document.getElementById('lErr');
+
+    if (!phone || !pass) {
+        err.textContent = '⚠️ Please fill all fields!';
+        err.style.display = 'block';
+        return;
+    }
+    err.style.display = 'none';
+
+    const hash = await sha256(pass);
+
+    // Offline login
+    if (!ONLINE) {
+        try {
+            const cached = await idbGet('cache', 'lastUser');
+            if (cached && cached.data.phone === phone && cached.data.passHash === hash) {
+                USER = cached.data;
+                localStorage.setItem('billOfficer', JSON.stringify(USER));
+                toast('✅ Offline login successful!', 'ok');
+                showApp();
+                return;
+            }
+        } catch (e) {}
+        err.textContent = '❌ Offline login failed. Please connect online first time.';
+        err.style.display = 'block';
+        return;
+    }
+
+    showLoading('Logging in...');
+
+    try {
+        const snap = await db.collection(CU).where('phone', '==', phone).get();
+        if (snap.empty) {
+            hideLoading();
+            err.textContent = '❌ Account not found!';
+            err.style.display = 'block';
+            return;
+        }
+
+        const doc = snap.docs[0];
+        const data = doc.data();
+
+        let ok = false;
+        if (data.passHash) ok = data.passHash === hash;
+        else if (data.password) ok = data.password === pass;
+
+        if (!ok) {
+            hideLoading();
+            err.textContent = '❌ Wrong password!';
+            err.style.display = 'block';
+            return;
+        }
+
+        if (data.status === 'disabled') {
+            hideLoading();
+            err.textContent = '⛔ Account disabled!';
+            err.style.display = 'block';
+            return;
+        }
+
+        USER = {id: doc.id, ...data, passHash: hash};
+        localStorage.setItem('billOfficer', JSON.stringify(USER));
+        await idbPut('cache', {key: 'lastUser', data: USER});
+
+        db.collection(CU).doc(doc.id).update({
+            lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+            passHash: hash
+        }).catch(() => {});
+
+        hideLoading();
+        toast('✅ Welcome, ' + data.name + '!', 'ok');
+        showApp();
+    } catch (e) {
+        hideLoading();
+        err.textContent = '❌ Error: ' + e.message;
+        err.style.display = 'block';
+    }
+}
+
+async function doLogout() {
+    const pend = await idbAll('pending');
+    if (pend.length > 0) {
+        if (!confirm(`⚠️ ${pend.length} entries pending upload! Logout will lose them. Continue?`)) return;
+    } else {
+        if (!confirm('Logout from app?')) return;
+    }
+    USER = null;
+    localStorage.removeItem('billOfficer');
+    clearTimeout(SESSION_T);
+    showLoginPage();
+    toast('👋 Logged out!');
+}
+
+// ═══════════════════════════════════════════
+// LOAD DATA
+// ═══════════════════════════════════════════
+async function loadSettings() {
+    try {
+        if (ONLINE) {
+            const doc = await db.collection(CFG).doc('main').get();
+            if (doc.exists) {
+                SETTINGS = doc.data();
+                await idbPut('cache', {key: 'settings', data: SETTINGS});
+                applyCustomization();
+            }
+        } else {
+            const c = await idbGet('cache', 'settings');
+            if (c) {
+                SETTINGS = c.data;
+                applyCustomization();
+            }
+        }
+    } catch (e) {
+        try {
+            const c = await idbGet('cache', 'settings');
+            if (c) SETTINGS = c.data;
+        } catch (e2) {}
+    }
+}
+
+function applyCustomization() {
+    if (!SETTINGS) return;
+    const r = document.documentElement.style;
+    if (SETTINGS.primary) r.setProperty('--p', SETTINGS.primary);
+    if (SETTINGS.primaryDark) r.setProperty('--pd', SETTINGS.primaryDark);
+    if (SETTINGS.primaryLight) r.setProperty('--pl', SETTINGS.primaryLight);
+    if (SETTINGS.accent) r.setProperty('--a', SETTINGS.accent);
+    if (SETTINGS.bg) r.setProperty('--bg', SETTINGS.bg);
+    if (SETTINGS.card) r.setProperty('--c', SETTINGS.card);
+    if (SETTINGS.text) r.setProperty('--t', SETTINGS.text);
+    if (SETTINGS.font) document.body.style.fontFamily = SETTINGS.font;
+    if (SETTINGS.appTitle) document.getElementById('appTitle').textContent = SETTINGS.appTitle;
+    if (SETTINGS.appSubtitle) document.getElementById('appSubtitle').textContent = SETTINGS.appSubtitle;
+    if (SETTINGS.activeDay) ACTIVE_DAY = SETTINGS.activeDay;
+}
+
+async function loadMainAreas() {
+    try {
+        if (ONLINE) {
+            const snap = await db.collection(CM).orderBy('day', 'asc').get();
+            MAIN_AREAS = snap.docs.map(d => ({id: d.id, ...d.data()}));
+            await idbPut('cache', {key: 'mainAreas', data: MAIN_AREAS});
+        } else {
+            const c = await idbGet('cache', 'mainAreas');
+            MAIN_AREAS = c ? c.data : [];
+        }
+    } catch (e) {
+        try {
+            const c = await idbGet('cache', 'mainAreas');
+            MAIN_AREAS = c ? c.data : [];
+        } catch (e2) { MAIN_AREAS = []; }
+    }
+}
+
+async function loadSubAreas() {
+    try {
+        if (ONLINE) {
+            const snap = await db.collection(CS).get();
+            SUB_AREAS = snap.docs.map(d => ({id: d.id, ...d.data()}));
+            await idbPut('cache', {key: 'subAreas', data: SUB_AREAS});
+        } else {
+            const c = await idbGet('cache', 'subAreas');
+            SUB_AREAS = c ? c.data : [];
+        }
+    } catch (e) {
+        try {
+            const c = await idbGet('cache', 'subAreas');
+            SUB_AREAS = c ? c.data : [];
+        } catch (e2) { SUB_AREAS = []; }
+    }
+}
+
+async function loadMyEntries() {
+    try {
+        const [pending, synced] = await Promise.all([
+            idbAll('pending'),
+            idbAll('synced')
+        ]);
+
+        MY_ENTRIES = [
+            ...pending.map(p => ({...p, isPending: true})),
+            ...synced.map(s => ({...s, isPending: false, status: 'synced'}))
+        ];
+
+        if (ONLINE) {
+            try {
+                const snap = await db.collection(CE).where('officerId', '==', USER.id).get();
+                const cloud = snap.docs.map(d => ({id: d.id, ...d.data(), isPending: false, status: 'synced'}));
+
+                for (let c of cloud) {
+                    c.createdAt = c.createdAt?.toDate?.().toISOString() || c.timestamp || '';
+                    await idbPut('synced', c);
+                }
+
+                const cloudIds = new Set(cloud.map(c => c.id));
+                const localOnly = synced.filter(s => !cloudIds.has(s.id));
+
+                MY_ENTRIES = [
+                    ...pending.map(p => ({...p, isPending: true})),
+                    ...cloud,
+                    ...localOnly.map(s => ({...s, isPending: false, status: 'synced'}))
+                ];
+            } catch (e) {}
+        }
+
+        MY_ENTRIES.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+        updateBadges();
+    } catch (e) {
+        console.log('Load entries err:', e);
+    }
+}
+
+// ═══════════════════════════════════════════
+// ACTIVE AREA LOGIC
+// ═══════════════════════════════════════════
+function updateActiveArea() {
+    // Find active area from main areas
+    ACTIVE_AREA = MAIN_AREAS.find(a => a.sequenceStatus === 'active');
+
+    if (!ACTIVE_AREA && MAIN_AREAS.length > 0) {
+        // Fallback: use first pending or first area
+        ACTIVE_AREA = MAIN_AREAS.find(a => a.sequenceStatus === 'pending') || MAIN_AREAS[0];
+    }
+
+    if (ACTIVE_AREA) {
+        ACTIVE_DAY = ACTIVE_AREA.day || 1;
+    }
+}
+
+// ═══════════════════════════════════════════
+// RENDER DASHBOARD
+// ═══════════════════════════════════════════
+function renderDashboard() {
+    if (!ACTIVE_AREA) {
+        document.getElementById('abDay').textContent = 'NO ACTIVE AREA';
+        document.getElementById('abArea').textContent = 'Contact Admin';
+        document.getElementById('abSubs').textContent = 'No areas configured';
+        return;
+    }
+
+    document.getElementById('abDay').textContent = 'DAY ' + ACTIVE_DAY;
+    document.getElementById('abArea').textContent = ACTIVE_AREA.name;
+
+    const subs = SUB_AREAS.filter(s => s.mainAreaId === ACTIVE_AREA.id);
+    document.getElementById('abSubs').textContent = subs.length + ' Sub-Areas';
+
+    // Calculate progress
+    let totalBills = 0, totalDist = 0;
+    for (let sub of subs) {
+        totalBills += (sub.totalBills || 0);
+        totalDist += (sub.cumulativeDistributed || 0);
+    }
+    const remaining = totalBills - totalDist;
+    const percent = totalBills > 0 ? Math.round((totalDist / totalBills) * 100) : 0;
+
+    document.getElementById('abBar').style.width = percent + '%';
+    document.getElementById('abPercent').textContent = percent + '%';
+
+    document.getElementById('sTotal').textContent = totalBills.toLocaleString();
+    document.getElementById('sDist').textContent = totalDist.toLocaleString();
+    document.getElementById('sRemain').textContent = remaining.toLocaleString();
+
+    // Today's entries
+    const today = new Date().toLocaleDateString('en-GB');
+    const todayEntries = MY_ENTRIES.filter(e => e.date === today);
+    renderEntryList('todayList', todayEntries.slice(0, 10));
+}
+
+// ═══════════════════════════════════════════
+// SUB AREA SELECTION
+// ═══════════════════════════════════════════
+function onSubAreaChange() {
+    const subId = document.getElementById('fSubArea').value;
+    const sub = SUB_AREAS.find(s => s.id === subId);
+
+    if (!sub) {
+        document.getElementById('fTotal').value = '';
+        document.getElementById('fTotal').disabled = false;
+        document.getElementById('fTotalHint').textContent = 'Enter once for this sub area';
+        document.getElementById('fStatus').value = 'Not Started';
+        document.getElementById('calcBox').style.display = 'none';
+        return;
+    }
+
+    // If total bills already set, disable and show
+    if (sub.totalBills && sub.totalBills > 0) {
+        document.getElementById('fTotal').value = sub.totalBills;
+        document.getElementById('fTotal').disabled = true;
+        document.getElementById('fTotalHint').textContent = '✅ Already set (cannot change)';
+    } else {
+        document.getElementById('fTotal').value = '';
+        document.getElementById('fTotal').disabled = false;
+        document.getElementById('fTotalHint').textContent = 'Enter once for this sub area';
+    }
+
+    document.getElementById('fStatus').value = sub.status || 'Not Started';
+    calculatePreview();
+}
+
+function calculatePreview() {
+    const subId = document.getElementById('fSubArea').value;
+    const sub = SUB_AREAS.find(s => s.id === subId);
+    const total = parseInt(document.getElementById('fTotal').value) || 0;
+    const today = parseInt(document.getElementById('fToday').value) || 0;
+
+    if (!sub || total === 0) {
+        document.getElementById('calcBox').style.display = 'none';
+        return;
+    }
+
+    const prevCumul = sub.cumulativeDistributed || 0;
+    const newCumul = prevCumul + today;
+    const remaining = total - newCumul;
+    const percent = total > 0 ? Math.min(Math.round((newCumul / total) * 100), 100) : 0;
+
+    document.getElementById('calcBox').style.display = 'grid';
+    document.getElementById('calcCumul').textContent = newCumul.toLocaleString();
+    document.getElementById('calcRemain').textContent = Math.max(remaining, 0).toLocaleString();
+    document.getElementById('calcPercent').textContent = percent + '%';
+
+    // Update status
+    let status = 'Not Started';
+    if (percent >= 100) status = 'Completed';
+    else if (percent > 0) status = 'In Progress';
+    document.getElementById('fStatus').value = status;
+}
+
+// ═══════════════════════════════════════════
+// ENTRY PAGE SETUP
+// ═══════════════════════════════════════════
+function setupEntryPage() {
+    if (!ACTIVE_AREA) {
+        document.getElementById('entryDay').textContent = 'No Active Day';
+        document.getElementById('entryArea').textContent = 'Contact Admin';
+        return;
+    }
+
+    document.getElementById('entryDay').textContent = 'Day ' + ACTIVE_DAY;
+    document.getElementById('entryArea').textContent = ACTIVE_AREA.name;
+
+    // Populate sub areas dropdown
+    const select = document.getElementById('fSubArea');
+    const subs = SUB_AREAS.filter(s => s.mainAreaId === ACTIVE_AREA.id);
+
+    select.innerHTML = '<option value="">-- Select Sub Area --</option>' +
+        subs.map(s => {
+            const status = s.status === 'Completed' ? ' ✅' : s.status === 'In Progress' ? ' ⏳' : '';
+            return `<option value="${s.id}">${s.name}${status}</option>`;
+        }).join('');
+
+    // Reset form
+    document.getElementById('fToday').value = '';
+    document.getElementById('fRemarks').value = '';
+    MEDIA_FILES = [];
+    renderMediaPreview();
+    document.getElementById('calcBox').style.display = 'none';
+
+    // Auto GPS
+    setTimeout(getGPS, 500);
+}
+
+// ═══════════════════════════════════════════
+// GPS LOCATION
+// ═══════════════════════════════════════════
+function getGPS() {
+    const el = document.getElementById('fGPS');
+    if (!el) return;
+    el.value = 'Getting location...';
+
+    if (!navigator.geolocation) {
+        el.value = 'GPS not available';
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            el.value = pos.coords.latitude.toFixed(6) + ', ' + pos.coords.longitude.toFixed(6);
+        },
+        err => {
+            el.value = 'Location permission denied';
+        },
+        {enableHighAccuracy: true, timeout: 10000}
+    );
+}
+
+// ═══════════════════════════════════════════
+// MEDIA CAPTURE
+// ═══════════════════════════════════════════
+function addFile(event, type) {
+    const files = event.target.files;
+    if (!files || !files.length) return;
+
+    for (let f of files) {
+        MEDIA_FILES.push({
+            file: f,
+            type: type,
+            url: URL.createObjectURL(f)
+        });
+    }
+
+    renderMediaPreview();
+    event.target.value = '';
+    toast(type === 'image' ? '📸 Photo added!' : '🎥 Video added!', 'ok');
+}
+
+function renderMediaPreview() {
+    const c = document.getElementById('mediaPreview');
+    c.innerHTML = MEDIA_FILES.map((m, i) => {
+        const view = m.type === 'image'
+            ? `<img src="${m.url}" onclick="openViewer('${m.url}','image')">`
+            : `<video src="${m.url}" onclick="openViewer('${m.url}','video')"></video>`;
+        return `<div class="media-thumb">${view}<button class="rm" onclick="removeFile(${i})">✕</button></div>`;
+    }).join('');
+}
+
+function removeFile(i) {
+    MEDIA_FILES.splice(i, 1);
+    renderMediaPreview();
+}
+
+function openViewer(url, type) {
+    const c = document.getElementById('viewerContent');
+    c.innerHTML = type === 'image'
+        ? `<img src="${url}">`
+        : `<video src="${url}" controls autoplay style="max-width:95%;max-height:80vh;border-radius:8px;"></video>`;
+    document.getElementById('viewer').classList.add('open');
+}
+
+function closeViewer() {
+    document.getElementById('viewer').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════
+// FILE CONVERSION
+// ═══════════════════════════════════════════
+function toBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function base64ToFile(b64, name, mime) {
+    const arr = b64.split(',');
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8 = new Uint8Array(n);
+    while (n--) u8[n] = bstr.charCodeAt(n);
+    return new File([u8], name, {type: mime});
+}
+
+// ═══════════════════════════════════════════
+// SUBMIT ENTRY
+// ═══════════════════════════════════════════
+async function submitEntry() {
+    const subId = document.getElementById('fSubArea').value;
+    const total = parseInt(document.getElementById('fTotal').value);
+    const today = parseInt(document.getElementById('fToday').value);
+    const remarks = document.getElementById('fRemarks').value.trim();
+    const gps = document.getElementById('fGPS').value;
+
+    if (!subId) {
+        toast('⚠️ Select a Sub Area!', 'err');
+        return;
+    }
+    if (!total || total <= 0) {
+        toast('⚠️ Enter Total Bills!', 'err');
+        return;
+    }
+    if (!today || today < 0) {
+        toast('⚠️ Enter Today\'s Distributed bills!', 'err');
+        return;
+    }
+
+    const sub = SUB_AREAS.find(s => s.id === subId);
+    if (!sub) {
+        toast('❌ Sub area not found!', 'err');
+        return;
+    }
+
+    const prevCumul = sub.cumulativeDistributed || 0;
+    const newCumul = prevCumul + today;
+
+    if (newCumul > total) {
+        if (!confirm(`⚠️ Warning: Total exceeds ${total}! Cumulative will be ${newCumul}. Continue?`)) return;
+    }
+
+    showLoading('Saving entry...');
+
+    // Convert media to base64
+    const mediaData = [];
+    for (let m of MEDIA_FILES) {
+        try {
+            const b64 = await toBase64(m.file);
+            mediaData.push({
+                b64: b64,
+                type: m.type,
+                name: m.file.name,
+                mime: m.file.type
+            });
+        } catch (e) {}
+    }
+
+    const percent = Math.min(Math.round((newCumul / total) * 100), 100);
+    let status = 'Not Started';
+    if (percent >= 100) status = 'Completed';
+    else if (percent > 0) status = 'In Progress';
+
+    const lid = 'l_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    const entry = {
+        lid: lid,
+        subAreaId: subId,
+        subAreaName: sub.name,
+        mainAreaId: ACTIVE_AREA.id,
+        mainAreaName: ACTIVE_AREA.name,
+        day: ACTIVE_DAY,
+        totalBills: total,
+        todayDistributed: today,
+        cumulativeDistributed: newCumul,
+        remaining: Math.max(total - newCumul, 0),
+        percent: percent,
+        status: status,
+        remarks: remarks,
+        gps: gps,
+        media: [],
+        mediaLocal: mediaData,
+        officerId: USER.id,
+        officerName: USER.name,
+        officerPhone: USER.phone,
+        timestamp: new Date().toISOString(),
+        date: new Date().toLocaleDateString('en-GB'),
+        syncStatus: 'pending'
+    };
+
+    try {
+        await idbPut('pending', entry);
+        hideLoading();
+
+        MEDIA_FILES = [];
+        renderMediaPreview();
+        document.getElementById('fToday').value = '';
+        document.getElementById('fRemarks').value = '';
+        document.getElementById('calcBox').style.display = 'none';
+
+        if (ONLINE) {
+            toast('✅ Saved! Uploading...', 'ok');
+            goPage('home');
+            await loadMyEntries();
+            renderDashboard();
+            uploadEntry(entry);
+        } else {
+            toast('💾 Saved offline!', 'ok');
+            goPage('home');
+            await loadMyEntries();
+            renderDashboard();
+        }
+    } catch (e) {
+        hideLoading();
+        toast('❌ Save failed: ' + e.message, 'err');
+    }
+}
+
+// ═══════════════════════════════════════════
+// CLOUDINARY UPLOAD
+// ═══════════════════════════════════════════
+async function uploadToCloudinary(file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', PRE);
+    fd.append('folder', 'bills-distribution');
+
+    const rt = file.type.startsWith('video') ? 'video' : 'image';
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLD}/${rt}/upload`, {
+        method: 'POST',
+        body: fd
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    return {url: data.secure_url, type: rt};
+}
+
+// ═══════════════════════════════════════════
+// UPLOAD ENTRY & UPDATE SUB AREA
+// ═══════════════════════════════════════════
+async function uploadEntry(entry) {
+    try {
+        entry.syncStatus = 'uploading';
+        await idbPut('pending', entry);
+        await loadMyEntries();
+
+        // Upload media
+        const uploaded = [];
+        if (entry.mediaLocal && entry.mediaLocal.length) {
+            for (let m of entry.mediaLocal) {
+                const file = base64ToFile(m.b64, m.name, m.mime);
+                const result = await uploadToCloudinary(file);
+                uploaded.push(result);
+            }
+        }
+
+        // Prepare final entry
+        const finalEntry = {...entry};
+        delete finalEntry.lid;
+        delete finalEntry.mediaLocal;
+        delete finalEntry.syncStatus;
+        finalEntry.media = uploaded;
+        finalEntry.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+
+        // Save entry to Firestore
+        const ref = await db.collection(CE).add(finalEntry);
+
+        // Update sub area
+        await db.collection(CS).doc(entry.subAreaId).update({
+            cumulativeDistributed: entry.cumulativeDistributed,
+            remaining: entry.remaining,
+            percent: entry.percent,
+            status: entry.status,
+            totalBills: entry.totalBills,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Check if all sub areas of active main area are completed
+        await checkMainAreaCompletion();
+
+        // Move to synced
+        finalEntry.id = ref.id;
+        finalEntry.createdAt = new Date().toISOString();
+        await idbPut('synced', finalEntry);
+        await idbDel('pending', entry.lid);
+
+        await loadMainAreas();
+        await loadSubAreas();
+        await loadMyEntries();
+        updateActiveArea();
+        renderDashboard();
+        return true;
+    } catch (e) {
+        entry.syncStatus = 'failed';
+        entry.err = e.message;
+        await idbPut('pending', entry);
+        await loadMyEntries();
+        console.error('Upload failed:', e);
+        return false;
+    }
+}
+
+async function checkMainAreaCompletion() {
+    if (!ACTIVE_AREA) return;
+
+    // Fetch fresh sub areas
+    const snap = await db.collection(CS).where('mainAreaId', '==', ACTIVE_AREA.id).get();
+    const subs = snap.docs.map(d => d.data());
+
+    if (subs.length === 0) return;
+
+    const allCompleted = subs.every(s => (s.status === 'Completed') || (s.percent >= 100));
+
+    if (allCompleted && SETTINGS.autoSequence !== false) {
+        // Mark current area as completed
+        await db.collection(CM).doc(ACTIVE_AREA.id).update({
+            sequenceStatus: 'completed',
+            completedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Find next pending area
+        const nextArea = MAIN_AREAS
+            .filter(a => a.day > ACTIVE_AREA.day && a.sequenceStatus === 'pending')
+            .sort((a, b) => a.day - b.day)[0];
+
+        if (nextArea) {
+            await db.collection(CM).doc(nextArea.id).update({
+                sequenceStatus: 'active',
+                activatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            toast(`🎉 Day ${ACTIVE_AREA.day} completed! Day ${nextArea.day} is now active.`, 'ok');
+        } else {
+            toast('🎉 All days completed!', 'ok');
+        }
+    }
+}
+
+// ═══════════════════════════════════════════
+// SYNC OPERATIONS
+// ═══════════════════════════════════════════
+async function manualSync() {
+    if (!ONLINE) {
+        toast('❌ No internet connection!', 'err');
+        return;
+    }
+    if (SYNCING) {
+        toast('⏳ Already syncing...', 'err');
+        return;
+    }
+
+    const pend = await idbAll('pending');
+    const toSync = pend.filter(p => p.syncStatus === 'pending' || p.syncStatus === 'failed');
+
+    if (!toSync.length) {
+        toast('✅ Everything is synced!', 'ok');
+        await loadMainAreas();
+        await loadSubAreas();
+        await loadMyEntries();
+        renderDashboard();
+        return;
+    }
+
+    SYNCING = true;
+    toast('📤 Syncing ' + toSync.length + ' entries...');
+
+    let ok = 0, fail = 0;
+    for (let entry of toSync) {
+        const result = await uploadEntry(entry);
+        if (result) ok++; else fail++;
+    }
+
+    SYNCING = false;
+
+    if (fail === 0) {
+        toast(`✅ ${ok} entries uploaded successfully!`, 'ok');
+    } else {
+        toast(`⚠️ ${ok} uploaded, ${fail} failed`, 'warn');
+    }
+
+    await loadMyEntries();
+    renderDashboard();
+}
+
+async function autoSync() {
+    if (SYNCING || !ONLINE) return;
+    const pend = await idbAll('pending');
+    const toSync = pend.filter(p => p.syncStatus === 'pending' || p.syncStatus === 'failed');
+    if (!toSync.length) return;
+
+    SYNCING = true;
+    for (let entry of toSync) {
+        await uploadEntry(entry);
+    }
+    SYNCING = false;
+}
+
+async function retryUpload(lid) {
+    const entry = await idbGet('pending', lid);
+    if (!entry) return;
+    if (!ONLINE) {
+        toast('❌ No internet!', 'err');
+        return;
+    }
+    toast('📤 Retrying...');
+    const result = await uploadEntry(entry);
+    toast(result ? '✅ Uploaded!' : '❌ Failed!', result ? 'ok' : 'err');
+}
+
+async function deletePendingEntry(lid) {
+    if (!confirm('Delete this pending entry?')) return;
+    await idbDel('pending', lid);
+    await loadMyEntries();
+    renderDashboard();
+    toast('🗑️ Deleted!', 'ok');
+}
+
+// ═══════════════════════════════════════════
+// RENDER FUNCTIONS
+// ═══════════════════════════════════════════
+function renderEntryList(containerId, entries) {
+    const c = document.getElementById(containerId);
+    if (!c) return;
+
+    if (!entries.length) {
+        c.innerHTML = '<div class="empty"><div class="ei">📭</div><p>No entries yet</p></div>';
+        return;
+    }
+
+    c.innerHTML = entries.map((e, i) => renderEntryCard(e, i)).join('');
+}
+
+function renderEntryCard(e, idx) {
+    const status = e.syncStatus || e.status || 'synced';
+    const syncTag = e.syncStatus || 'synced';
+    const statusColors = {
+        pending: {tag: 'pending', text: '⏳ Pending Upload'},
+        uploading: {tag: 'uploading', text: '⬆️ Uploading'},
+        failed: {tag: 'failed', text: '❌ Failed'},
+        synced: {tag: 'synced', text: '✅ Synced'}
+    };
+    const st = statusColors[syncTag] || statusColors.synced;
+
+    let photos = '';
+    if (e.media && e.media.length) {
+        photos = '<div class="ec-photos">' + e.media.slice(0, 4).map(m =>
+            m.type === 'image'
+                ? `<img src="${m.url}" onclick="openViewer('${m.url}','image')">`
+                : `<video src="${m.url}" onclick="openViewer('${m.url}','video')"></video>`
+        ).join('') + '</div>';
+    } else if (e.mediaLocal && e.mediaLocal.length) {
+        photos = '<div class="ec-photos">' + e.mediaLocal.slice(0, 4).map(m =>
+            m.type === 'image'
+                ? `<img src="${m.b64}">`
+                : `<video src="${m.b64}"></video>`
+        ).join('') + '</div>';
+    }
+
+    let actions = '';
+    if (syncTag === 'failed') {
+        actions = `<div class="ec-actions">
+            <button class="btn btn-w btn-sm" onclick="retryUpload('${e.lid}')">🔄 Retry</button>
+            <button class="btn btn-r btn-sm" style="margin:0" onclick="deletePendingEntry('${e.lid}')">🗑️ Delete</button>
+        </div>`;
+    } else if (syncTag === 'pending') {
+        actions = `<div class="ec-actions">
+            <button class="btn btn-p btn-sm" onclick="retryUpload('${e.lid}')">📤 Upload</button>
+            <button class="btn btn-r btn-sm" style="margin:0" onclick="deletePendingEntry('${e.lid}')">🗑️</button>
+        </div>`;
+    }
+
+    const gps = e.gps ? `<div class="ec-gps">📍 ${e.gps}</div>` : '';
+    const remarks = e.remarks ? `<div class="ec-remarks">💬 ${e.remarks}</div>` : '';
+
+    return `<div class="entry-card ${syncTag}">
+        <span class="ec-status ${syncTag}">${st.text}</span>
+        <div class="ec-header">
+            <div class="ec-num">${idx + 1}</div>
+            <div class="ec-info">
+                <div class="ec-name">${e.subAreaName || '-'}</div>
+                <div class="ec-area">📅 Day ${e.day} • ${e.mainAreaName || '-'} • ${e.date || ''}</div>
+            </div>
+        </div>
+        <div class="ec-details">
+            <div class="ec-row"><span class="ec-lbl">Total Bills</span><span class="ec-val">${(e.totalBills || 0).toLocaleString()}</span></div>
+            <div class="ec-row"><span class="ec-lbl">Today</span><span class="ec-val c-a">${(e.todayDistributed || 0).toLocaleString()}</span></div>
+            <div class="ec-row"><span class="ec-lbl">Cumulative</span><span class="ec-val c-s">${(e.cumulativeDistributed || 0).toLocaleString()}</span></div>
+            <div class="ec-row"><span class="ec-lbl">Remaining</span><span class="ec-val c-w">${(e.remaining || 0).toLocaleString()}</span></div>
+        </div>
+        <div class="ec-progress"><div class="ec-bar" style="width:${e.percent || 0}%"></div></div>
+        <div class="ec-gps" style="text-align:right;margin-top:3px;">${e.percent || 0}% • ${e.status || 'Not Started'}</div>
+        ${gps}${remarks}${photos}${actions}
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+// AREAS PAGE
+// ═══════════════════════════════════════════
+function renderAreas() {
+    const c = document.getElementById('areasList');
+    if (!MAIN_AREAS.length) {
+        c.innerHTML = '<div class="empty"><div class="ei">🏘️</div><p>No areas configured yet</p></div>';
+        return;
+    }
+
+    c.innerHTML = MAIN_AREAS.map(area => {
+        const subs = SUB_AREAS.filter(s => s.mainAreaId === area.id);
+        let totalBills = 0, totalDist = 0;
+        for (let s of subs) {
+            totalBills += (s.totalBills || 0);
+            totalDist += (s.cumulativeDistributed || 0);
+        }
+        const percent = totalBills > 0 ? Math.round((totalDist / totalBills) * 100) : 0;
+        const status = area.sequenceStatus || 'pending';
+        const statusText = status === 'active' ? 'ACTIVE' : status === 'completed' ? 'DONE' : 'PENDING';
+        const cardClass = status === 'active' ? 'active-area' : status === 'completed' ? 'completed' : 'pending';
+
+        return `<div class="area-item ${cardClass}">
+            <div class="area-header">
+                <div class="area-day">${area.day}</div>
+                <div class="area-name">${area.name}</div>
+                <span class="area-badge ${status}">${statusText}</span>
+            </div>
+            <div class="area-details">
+                <div class="area-detail">
+                    <div class="area-detail-l">Sub Areas</div>
+                    <div class="area-detail-v">${subs.length}</div>
+                </div>
+                <div class="area-detail">
+                    <div class="area-detail-l">Total</div>
+                    <div class="area-detail-v">${totalBills.toLocaleString()}</div>
+                </div>
+                <div class="area-detail">
+                    <div class="area-detail-l">Distributed</div>
+                    <div class="area-detail-v c-s">${totalDist.toLocaleString()}</div>
+                </div>
+            </div>
+            <div class="area-progress">
+                <div class="area-prog-bar"><div class="area-prog-fill" style="width:${percent}%"></div></div>
+                <div class="area-percent">${percent}% Complete</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ═══════════════════════════════════════════
+// HISTORY PAGE
+// ═══════════════════════════════════════════
+function renderHistory() {
+    const q = (document.getElementById('hSearch')?.value || '').toLowerCase();
+    const c = document.getElementById('historyList');
+
+    let entries = MY_ENTRIES;
+
+    if (CURRENT_FILTER !== 'all') {
+        entries = entries.filter(e => (e.syncStatus || 'synced') === CURRENT_FILTER);
+    }
+
+    if (q) {
+        entries = entries.filter(e =>
+            Object.values(e).some(v => v && String(v).toLowerCase().includes(q))
+        );
+    }
+
+    if (!entries.length) {
+        c.innerHTML = '<div class="empty"><div class="ei">🔍</div><p>No entries found</p></div>';
+        return;
+    }
+
+    c.innerHTML = entries.map((e, i) => renderEntryCard(e, i)).join('');
+}
+
+function setFilter(f, btn) {
+    CURRENT_FILTER = f;
+    document.querySelectorAll('.ftab').forEach(t => t.classList.remove('act'));
+    btn.classList.add('act');
+    renderHistory();
+}
+
+// ═══════════════════════════════════════════
+// PROGRESS PAGE WITH CHARTS
+// ═══════════════════════════════════════════
+function renderProgress() {
+    const today = new Date().toLocaleDateString('en-GB');
+    const todayCount = MY_ENTRIES.filter(e => e.date === today).length;
+
+    // Completed sub areas by this officer
+    const completedSubs = new Set();
+    MY_ENTRIES.forEach(e => {
+        if (e.status === 'Completed') completedSubs.add(e.subAreaId);
+    });
+
+    document.getElementById('pgTotal').textContent = MY_ENTRIES.length;
+    document.getElementById('pgDone').textContent = completedSubs.size;
+    document.getElementById('pgToday').textContent = todayCount;
+
+    renderWeeklyChart();
+    renderStatusChart();
+    renderAreaChart();
+}
+
+function renderWeeklyChart() {
+    const ctx = document.getElementById('chartWeekly');
+    if (!ctx) return;
+    if (CHARTS.weekly) CHARTS.weekly.destroy();
+
+    // Get last 7 days
+    const labels = [];
+    const data = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toLocaleDateString('en-GB');
+        labels.push(d.toLocaleDateString('en-GB', {weekday: 'short'}));
+        const dayEntries = MY_ENTRIES.filter(e => e.date === dateStr);
+        const total = dayEntries.reduce((sum, e) => sum + (e.todayDistributed || 0), 0);
+        data.push(total);
+    }
+
+    CHARTS.weekly = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Bills Distributed',
+                data: data,
+                borderColor: '#003366',
+                backgroundColor: 'rgba(0,51,102,0.1)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#FF6B35',
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {legend: {display: false}},
+            scales: {y: {beginAtZero: true}}
+        }
+    });
+}
+
+function renderStatusChart() {
+    const ctx = document.getElementById('chartStatus');
+    if (!ctx) return;
+    if (CHARTS.status) CHARTS.status.destroy();
+
+    const completed = MY_ENTRIES.filter(e => e.status === 'Completed').length;
+    const inProgress = MY_ENTRIES.filter(e => e.status === 'In Progress').length;
+    const notStarted = MY_ENTRIES.filter(e => e.status === 'Not Started').length;
+
+    CHARTS.status = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'In Progress', 'Not Started'],
+            datasets: [{
+                data: [completed, inProgress, notStarted],
+                backgroundColor: ['#10B981', '#F59E0B', '#9CA3AF'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {legend: {position: 'bottom', labels: {font: {size: 10}}}}
+        }
+    });
+}
+
+function renderAreaChart() {
+    const ctx = document.getElementById('chartArea');
+    if (!ctx) return;
+    if (CHARTS.area) CHARTS.area.destroy();
+
+    // Group by main area
+    const areaData = {};
+    MY_ENTRIES.forEach(e => {
+        const name = e.mainAreaName || 'Unknown';
+        areaData[name] = (areaData[name] || 0) + (e.todayDistributed || 0);
+    });
+
+    const labels = Object.keys(areaData);
+    const data = Object.values(areaData);
+
+    CHARTS.area = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Distributed',
+                data: data,
+                backgroundColor: '#003366',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {legend: {display: false}},
+            scales: {x: {beginAtZero: true}}
+        }
+    });
+}
+
+// ═══════════════════════════════════════════
+// PROFILE & SIDEBAR UPDATES
+// ═══════════════════════════════════════════
+function updateProfile() {
+    if (!USER) return;
+    const name = USER.name || 'Officer';
+    document.getElementById('profAv').textContent = name[0].toUpperCase();
+    document.getElementById('profName').textContent = name;
+    document.getElementById('profPhone').textContent = USER.phone || '--';
+
+    const today = new Date().toLocaleDateString('en-GB');
+    const todayCount = MY_ENTRIES.filter(e => e.date === today).length;
+    const pendCount = MY_ENTRIES.filter(e => e.syncStatus === 'pending' || e.syncStatus === 'failed').length;
+
+    document.getElementById('prTotal').textContent = MY_ENTRIES.length;
+    document.getElementById('prToday').textContent = todayCount;
+    document.getElementById('prPend').textContent = pendCount;
+    document.getElementById('prPI').textContent = pendCount;
+    document.getElementById('prUp').textContent = MY_ENTRIES.length - pendCount;
+    document.getElementById('prDay').textContent = ACTIVE_DAY;
+
+    const assigned = USER.assignedAreas && USER.assignedAreas.length
+        ? USER.assignedAreas.length + ' areas'
+        : 'All areas';
+    document.getElementById('prAreas').textContent = assigned;
+}
+
+function updateSidebar() {
+    if (!USER) return;
+    const name = USER.name || 'Officer';
+    document.getElementById('sbAvatar').textContent = name[0].toUpperCase();
+    document.getElementById('sbName').textContent = name;
+    document.getElementById('sbPhone').textContent = USER.phone || '--';
+    document.getElementById('sbRole').textContent = USER.role === 'admin' ? 'Admin' : 'Field Officer';
+}
+
+function updateBadges() {
+    const pendCount = MY_ENTRIES.filter(e => e.syncStatus === 'pending' || e.syncStatus === 'failed').length;
+
+    const hBadge = document.getElementById('hBadge');
+    const dBadge = document.getElementById('dBadge');
+    const pTag = document.getElementById('pTag');
+    const syncBtn = document.getElementById('syncBtn');
+    const syncTx = document.getElementById('syncTx');
+    const syncDot = document.getElementById('syncDot');
+
+    if (pendCount > 0) {
+        if (hBadge) { hBadge.style.display = 'inline'; hBadge.textContent = pendCount; }
+        if (dBadge) { dBadge.classList.add('show'); dBadge.textContent = pendCount; }
+        if (pTag) { pTag.classList.add('show'); pTag.textContent = pendCount + ' Pending'; }
+        if (syncBtn) syncBtn.classList.add('show');
+        if (syncTx) syncTx.textContent = 'Upload ' + pendCount + ' Pending';
+        if (syncDot) syncDot.classList.add('show');
+    } else {
+        if (hBadge) hBadge.style.display = 'none';
+        if (dBadge) dBadge.classList.remove('show');
+        if (pTag) pTag.classList.remove('show');
+        if (syncBtn) syncBtn.classList.remove('show');
+        if (syncDot) syncDot.classList.remove('show');
+    }
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sbOverlay').classList.toggle('open');
+}
+
+function goPage(page, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.bn').forEach(b => b.classList.remove('act'));
+    document.querySelectorAll('.sb-link').forEach(l => l.classList.remove('act'));
+
+    const pgEl = document.getElementById('pg-' + page);
+    if (pgEl) pgEl.classList.add('active');
+
+    const navMap = {home: 'nb-home', entry: 'nb-entry', progress: 'nb-progress', history: 'nb-history', profile: 'nb-profile'};
+    const nb = document.getElementById(navMap[page]);
+    if (nb) nb.classList.add('act');
+
+    if (el) el.classList.add('act');
+
+    // Close sidebar
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sbOverlay').classList.remove('open');
+
+    // Page-specific actions
+    if (page === 'home') renderDashboard();
+    if (page === 'entry') setupEntryPage();
+    if (page === 'progress') renderProgress();
+    if (page === 'areas') renderAreas();
+    if (page === 'history') renderHistory();
+    if (page === 'profile') updateProfile();
+}
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+function toast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => t.className = 'toast', 3000);
+}
+
+function showLoading(msg) {
+    document.getElementById('ldMsg').textContent = msg || 'Loading...';
+    document.getElementById('loading').classList.add('show');
+}
+
+function hideLoading() {
+    document.getElementById('loading').classList.remove('show');
+}
+</script>
+</body>
+</html>
