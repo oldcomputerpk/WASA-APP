@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en" data-theme="ocean">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WASA Kasur · Revenue Data Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand"><div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 2.5C12 2.5 5 10 5 15a7 7 0 0 0 14 0c0-5-7-12.5-7-12.5z"/></svg></div><div>WASA Kasur<small>Revenue Data Center</small></div></div>
+  <nav class="nav" id="nav">
+    <a href="#consumers">Consumers</a><a href="#dashboard">Dashboard</a><a href="#onelink">1-Link Update</a><a href="#collection">Collection</a><a href="#closed">Closed Period Data</a><a href="#activities">Activities</a>
+  </nav>
+  <div class="tools">
+    <a class="btn pri" href="#upload" id="upBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Upload data</a>
+    <div class="themes" role="group" aria-label="Theme"><button data-t="ocean" style="background:#2f7bff" title="Ocean glass"></button><button data-t="gold" style="background:#e9b949" title="Gold glass"></button><button data-t="clean" style="background:#fff;border-color:#ccc" title="Clean white"></button></div>
+    <button class="ibtn on" id="noteBtn" title="Show or hide design notes" aria-label="Design notes"><b style="font-size:15px">i</b></button>
+    <a class="ibtn" href="#settings/approvals" title="Pending approvals"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="dot"></span></a>
+    <a class="ibtn" href="#settings/profile" id="gear" title="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
+    <a class="me" href="#settings/profile"><div class="av">PN</div><div><b>Profile Name</b><small>Assistant Director Revenue</small></div></a>
+  </div>
+</header>
+
+<!-- DASHBOARD -->
+<section class="page" id="p-dashboard">
+  <div class="head"><div><h1>Revenue dashboard</h1><p>Consumers, billing and collection for <b id="perLbl">Sep-2026</b> · one row per consumer number, joined from both files.</p></div>
+    <div class="act"><label class="chk"><input type="checkbox" id="tagsChk" checked> Show F-tags</label><button class="btn" onclick="go('export')">Export report</button></div></div>
+  <div class="card fbar">
+    <label>Period<select id="fP"><option>Sep-2026</option><option disabled>Oct-2026 (not uploaded)</option></select></label>
+    <label>Consumer type<select id="fT"></select></label>
+    <label>Zone<select id="fZ"></select></label>
+    <span class="sp"></span><span class="pill" id="fCount"></span><button class="btn sm" id="fReset">Reset filters</button>
+  </div>
+  <div class="grid" id="dash"></div>
+</section>
+
+<!-- CONSUMERS --><section class="page" id="p-consumers"></section>
+<section class="page" id="p-collection"></section>
+<section class="page" id="p-onelink"></section>
+<section class="page" id="p-closed"></section>
+<section class="page" id="p-activities"></section>
+
+<section class="page" id="p-upload"></section>
+<section class="page" id="p-export"></section>
+
+<!-- SETTINGS -->
+<section class="page" id="p-settings">
+  <div class="head"><div><h1>Settings</h1><p>Profile, access, rules and how the data is organised.</p></div></div>
+  <div class="sset"><aside class="card sl" id="sl"></aside><div id="sBody"></div></div>
+</section>
+</div>
+<div class="ov" id="ov"></div><aside class="drawer" id="drawer" aria-label="Details"></aside><div class="modal" id="modal" role="dialog"></div>
+<div class="tip" id="tip"></div><div class="toast" id="toast"></div>
+
+<script src="js/jszip.min.js"></script>
+<script src="js/xlsx-io.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/store.js"></script>
+<script src="firebase-config.js"></script>
+<script src="js/cloud.js"></script>
+<script src="js/pages.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
